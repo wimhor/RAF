@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 9 March 2019
+** Wim Hordijk   Last modified: 4 March 2026
 */
 
 #ifndef _REACTION_H_
@@ -50,15 +50,6 @@ class Reaction
   void      addCatalyst       (Molecule *mol);
   void      removeCatalyst    (Molecule *mol);
   void      clearCatalysts    ();
-  int       getNrInhibitors   ();
-  Molecule *getInhibitorFirst ();
-  Molecule *getInhibitorNext  ();
-  bool      hasInhibitor      (Molecule *mol);
-  void      addInhibitor      (Molecule *mol);
-  void      removeInhibitor   (Molecule *mol);
-  void      clearInhibitors   ();
-  double    getRate           ();
-  void      setRate           (double r);
   void      setDirection      (int dir);
   int       getDirection      ();
 
@@ -75,9 +66,8 @@ class Reaction
   */
   string                    ID;
   int                       direction;
-  double                    rate;
-  list<Molecule*>           reactants, products, catalysts, inhibitors;
-  list<Molecule*>::iterator itReactant, itProduct, itCatalyst, itInhibitor;
+  list<Molecule*>           reactants, products, catalysts;
+  list<Molecule*>::iterator itReactant, itProduct, itCatalyst;
 };
 
 

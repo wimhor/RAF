@@ -1,7 +1,7 @@
 /*
 ** Molecule.h: Definition of a molecule type.
 **
-** Wim Hordijk   Last modified: 9 March 2019
+** Wim Hordijk   Last modified: 4 March 2026
 */
 
 #ifndef _MOLECULE_H_
@@ -25,13 +25,12 @@ class Molecule
   /*
   ** Constructors and destructors.
   */
-  Molecule  (string id, string seq);
+  Molecule  (string seq);
   ~Molecule ();
 
   /*
   ** Public member functions.
   */
-  void      getID               (string *id);
   void      getSequence         (string *seq);
   int       getSeqLength        ();
   void      addAsReactant       (Reaction *reac);
@@ -40,20 +39,15 @@ class Molecule
   void      removeAsProduct     (Reaction *reac);
   void      addAsCatalyst       (Reaction *reac);
   void      removeAsCatalyst    (Reaction *reac);
-  void      addAsInhibitor      (Reaction *reac);
-  void      removeAsInhibitor   (Reaction *reac);
   int       getNrAsReactant     ();
   int       getNrAsProduct      ();
   int       getNrAsCatalyst     ();
-  int       getNrAsInhibitor    ();
   Reaction *getAsReactantFirst  ();
   Reaction *getAsReactantNext   ();
   Reaction *getAsProductFirst   ();
   Reaction *getAsProductNext    ();
   Reaction *getAsCatalystFirst  ();
   Reaction *getAsCatalystNext   ();
-  Reaction *getAsInhibitorFirst ();
-  Reaction *getAsInhibitorNext  ();
 
   /*
   ** Public member variables.
@@ -66,9 +60,9 @@ class Molecule
   ** Private member variables.
   */
   int                      seqLength;
-  string                   ID, sequence;
-  set<Reaction*>           asReactant, asProduct, asCatalyst, asInhibitor;
-  set<Reaction*>::iterator itReactant, itProduct, itCatalyst, itInhibitor;
+  string                   sequence;
+  set<Reaction*>           asReactant, asProduct, asCatalyst;
+  set<Reaction*>::iterator itReactant, itProduct, itCatalyst;
 };
 
 

@@ -1,7 +1,7 @@
 /*
 ** Molecule.cxx: Molecule class.
 **
-** Wim Hordijk   Last modified: 9 March 2019
+** Wim Hordijk   Last modified: 4 March 2026
 */
 
 #include "Molecule.h"
@@ -12,16 +12,14 @@
 ** Molecule: The constructor.
 **
 ** Parameters:
-**   - id:  The molecule ID (can be any string).
 **   - seq: The molecule "sequence" (can be any string).
 */
 
-Molecule::Molecule (string id, string seq)
+Molecule::Molecule (string seq)
 {
   /*
   ** Get the molecule information.
   */
-  ID.assign (id);
   sequence.assign (seq);
   seqLength = sequence.length ();
 
@@ -31,7 +29,6 @@ Molecule::Molecule (string id, string seq)
   itReactant = asReactant.begin ();
   itProduct = asProduct.begin ();
   itCatalyst = asCatalyst.begin ();
-  itInhibitor = asInhibitor.begin ();
 }
 
 
@@ -47,23 +44,6 @@ Molecule::~Molecule ()
   asReactant.clear ();
   asProduct.clear ();
   asCatalyst.clear ();
-  asInhibitor.clear ();
-}
-
-
-/*
-** getID: Get the molecule ID.
-**
-** Parameters:
-**   - id: A pointer to a string to hold (a copy of) the molecule ID.
-*/
-
-void Molecule::getID (string *id)
-{
-  /*
-  ** Copy the molecule ID.
-  */
-  id->assign (ID);
 }
 
 
@@ -196,38 +176,6 @@ void Molecule::removeAsCatalyst (Reaction *reac)
 
 
 /*
-** addAsInhibitor: Add a reaction for which the molecule is an inhibitor.
-**
-** Parameters:
-**   - reac: A pointer to the reaction to add.
-*/
-
-void Molecule::addAsInhibitor (Reaction *reac)
-{
-  /*
-  ** Add the reaction to the list.
-  */
-  asInhibitor.insert (reac);
-}
-
-
-/*
-** removeAsInhibitor: Remove a reaction for which the molecule is an inhibitor.
-**
-** Parameters:
-**   - reac: A pointer to the reaction to remove.
-*/
-
-void Molecule::removeAsInhibitor (Reaction *reac)
-{
-  /*
-  ** Remove the reaction from the list.
-  */
-  asInhibitor.erase (reac);
-}
-
-
-/*
 ** getNrAsReactant: Get the number of reactions for which the molecule is
 **                  a reactant.
 **
@@ -275,23 +223,6 @@ int Molecule::getNrAsCatalyst ()
   ** Return the number of reactions.
   */
   return (asCatalyst.size ());
-}
-
-
-/*
-** getNrAsInhibitor: Get the number of reactions for which the molecule is
-**                   an inhibitor.
-**
-** Returns:
-**   - The number of reaction for which this molecule is an inhibitor.
-*/
-
-int Molecule::getNrAsInhibitor ()
-{
-  /*
-  ** Return the number of reactions.
-  */
-  return (asInhibitor.size ());
 }
 
 
@@ -474,70 +405,6 @@ Reaction *Molecule::getAsCatalystNext ()
   if (itCatalyst != asCatalyst.end ())
   {
     reac = *itCatalyst;
-  }
-  else
-  {
-    reac = NULL;
-  }
-
-  /*
-  ** Return the result.
-  */
-  return (reac);
-}
-
-
-/*
-** getAsInhibitorFirst: Get the first reaction for which the molecule is an
-**                      inhibitor.
-**
-** Returns:
-**   - A pointer to the first reaction (or NULL if out of bounds).
-*/
-
-Reaction *Molecule::getAsInhibitorFirst ()
-{
-  Reaction *reac;
-
-  /*
-  ** Get the first reaction.
-  */
-  itInhibitor = asInhibitor.begin ();
-  if (itInhibitor != asInhibitor.end ())
-  {
-    reac = *itInhibitor;
-  }
-  else
-  {
-    reac = NULL;
-  }
-
-  /*
-  ** Return the result.
-  */
-  return (reac);
-}
-
-
-/*
-** getAsInhibitorNext: Get the next reaction for which the molecule is an
-**                     inhibitor.
-**
-** Returns:
-**   - A pointer to the first reaction (or NULL if out of bounds).
-*/
-
-Reaction *Molecule::getAsInhibitorNext ()
-{
-  Reaction *reac;
-
-  /*
-  ** Get the next reaction.
-  */
-  itInhibitor++;
-  if (itInhibitor != asInhibitor.end ())
-  {
-    reac = *itInhibitor;
   }
   else
   {

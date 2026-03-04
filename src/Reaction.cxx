@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 9 March 2019
+** Wim Hordijk   Last modified: 4 March 2026
 */
 
 #include "Reaction.h"
@@ -23,8 +23,6 @@ Reaction::Reaction (string id)
   itReactant = reactants.begin ();
   itProduct = products.begin ();
   itCatalyst = catalysts.begin ();
-  itInhibitor = inhibitors.begin ();
-  rate = 1.0;
   this->id = 0;
   isInSet = false;
   direction = UNI_DIR;
@@ -67,14 +65,6 @@ Reaction::~Reaction ()
     itCatalyst++;
   }
   catalysts.clear ();
-  itInhibitor = inhibitors.begin ();
-  while (itInhibitor != inhibitors.end ())
-  {
-    mol = *itInhibitor;
-    mol->removeAsInhibitor (this);
-    itInhibitor++;
-  }
-  inhibitors.clear ();
 }
 
 
@@ -613,219 +603,6 @@ void Reaction::clearCatalysts ()
   }
   catalysts.clear ();
   itCatalyst = catalysts.begin ();
-}
-
-
-/*
-** getNrInhibitor: Get the number of inhibitors in the reaction.
-**
-** Returns:
-**   - The number of inhibitors.
-*/
-int Reaction::getNrInhibitors ()
-{
-  /*
-  ** Return the number of inhibitors.
-  */
-  return (inhibitors.size ());
-}
-
-
-/*
-** getInhibitorFirst: Get the first inhibitor in the list.
-**
-** Returns:
-**   - A pointer to the first inhibitor in the list (NULL if list is empty).
-*/
-
-Molecule *Reaction::getInhibitorFirst ()
-{
-  Molecule *mol;
-
-  /*
-  ** Get the first inhibitor.
-  */
-  itInhibitor = inhibitors.begin ();
-  if (itInhibitor != inhibitors.end ())
-  {
-    mol = *itInhibitor;
-  }
-  else
-  {
-    mol = NULL;
-  }
-
-  /*
-  ** Return the result.
-  */
-  return (mol);
-}
-
-
-/*
-** getInhibitorNext: Get the next inhibitor in the list.
-**
-** Returns:
-**   - A pointer to the next inhibitor in the list (NULL if end of list).
-*/
-
-Molecule *Reaction::getInhibitorNext ()
-{
-  Molecule *mol;
-
-  /*
-  ** Get the next inhibitor.
-  */
-  itInhibitor++;
-  if (itInhibitor != inhibitors.end ())
-  {
-    mol = *itInhibitor;
-  }
-  else
-  {
-    mol = NULL;
-  }
-
-  /*
-  ** Return the result.
-  */
-  return (mol);
-}
-
-
-/*
-** hasInhibitor: Check if the reaction has a given molecule as an inhibitor.
-**
-** Parameters:
-**   - mol: A molecule type.
-**
-** Returns:
-**   - If the molecule is an inhibitor: true.
-**   - Otherwise:                       false.
-*/
-
-bool Reaction::hasInhibitor (Molecule *mol)
-{
-  bool hasInhib;
-
-  /*
-  ** Check whether the molecule is an inhibitor.
-  **
-  ** Note that we are simply comparing pointers here, so it is assumed
-  ** that each molecule type is defined only once (as it should be)!
-  */
-  hasInhib = false;
-  itInhibitor = inhibitors.begin ();
-  while (itInhibitor != inhibitors.end ())
-  {
-    if (mol == *itInhibitor)
-    {
-      hasInhib = true;
-      break;
-    }
-    itInhibitor++;
-  }
-
-  /*
-  ** Return the result.
-  */
-  return (hasInhib);
-}
-
-
-/*
-** addInhibitor: Add an inhibitor to the list.
-**
-** Parameters:
-**   - mol: The molecule to add.
-*/
-
-void Reaction::addInhibitor (Molecule *mol)
-{
-  /*
-  ** Add the inhibitor to the list.
-  */
-  inhibitors.push_back (mol);
-  mol->addAsInhibitor (this);
-}
-
-
-/*
-** removeInhibitor: Remove an inhibitor from the list.
-**
-** Parameters:
-**   - mol: The molecule to remove.
-*/
-
-void Reaction::removeInhibitor (Molecule *mol)
-{
-  /*
-  ** Remove the molecule from the list.
-  */
-  inhibitors.remove (mol);
-  mol->removeAsInhibitor (this);
-}
-
-
-/*
-** clearInhibitors: Clear the inhibitors list.
-*/
-
-void Reaction::clearInhibitors ()
-{
-  Molecule *mol;
-
-  /*
-  ** Clear the inhibitors list.
-  */
-  itInhibitor = inhibitors.begin ();
-  while (itInhibitor != inhibitors.end ())
-  {
-    mol = *itInhibitor;
-    mol->removeAsInhibitor (this);
-    itInhibitor++;
-  }
-  inhibitors.clear ();
-  itInhibitor = inhibitors.begin ();
-}
-
-
-/*
-** getRate: Get the reaction rate.
-**
-** Returns:
-**   - The reaction rate.
-*/
-
-double Reaction::getRate ()
-{
-  /*
-  ** Return the reaction rate.
-  */
-  return (rate);
-}
-
-
-/*
-** setRate: Set the reaction rate.
-**
-** Parameters:
-**   - r: The reaction rate to set (set to zero if negative).
-*/
-
-void Reaction::setRate (double r)
-{
-  /*
-  ** Set the reaction rate.
-  */
-  if (r >= 0.0)
-  {
-    rate = r;
-  }
-  else
-  {
-    rate = 0.0;
-  }
 }
 
 

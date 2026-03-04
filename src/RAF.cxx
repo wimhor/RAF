@@ -1,7 +1,7 @@
 /*
-** RAF.cxx: Compute the maxRAF from a given reaction set.
+** RAF.cxx: Find the maxRAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 9 March 2019
+** Wim Hordijk   Last modified: 4 March 2026
 */
 
 #include <iostream>
@@ -26,9 +26,10 @@ using namespace std;
 int main (int argc, char **argv)
 {
   int       status, rSize;
-  char      CRSfile[256];
+  char      fileName[256];
   ifstream  ifs;
-  ReacSet  *rSet;
+  ofstream  ofs;
+  ReacSet  *rSet, *rCopy;
 
   status = 0;
 
@@ -42,16 +43,16 @@ int main (int argc, char **argv)
     cerr << "  Usage: " << argv[0] << " <inputFile>" << endl;
     goto End_of_Routine;
   }
-  strcpy (CRSfile, argv[1]);
+  strcpy (fileName, argv[1]);
 
   /*
-  ** Read in the reaction set.
+  ** Read the reaction network from the given input file.
   */
-  ifs.open (CRSfile);
+  ifs.open (fileName);
   if (!ifs.is_open ())
   {
     status = 1;
-    cerr << "Could not open input file " << CRSfile << endl;
+    cerr << "Could not open input file " << fileName << endl;
     goto End_of_Routine;
   }
   rSet = new ReacSet ();
@@ -61,6 +62,15 @@ int main (int argc, char **argv)
     goto End_of_Routine;
   }
   ifs.close ();
+
+  /*
+  ** Write the reaction network to an output file.
+  */
+  rCopy = new ReacSet ();
+  rCopy = rSet;
+  ofs.open ("out.txt");
+  rCopy->writeToFile (ofs);
+  ofs.close ();
 
   /*
   ** Find the maxRAF.

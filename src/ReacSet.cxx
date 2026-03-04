@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 9 March 2019
+** Wim Hordijk   Last modified: 4 March 2026
 */
 
 #include <string.h>
@@ -1122,138 +1122,27 @@ int ReacSet::readFromFile (ifstream& is)
   RAF.clear ();
 
   /*
-  ** Read the reaction set.
-  **
-  ** Meta-data.
+  ** Read the reactions.
   */
-  s[0] = '\0';
-  while ((strlen (s) == 0) || (s[0] == '#'))
-  {
-    is.getline (s, 1024);
-  }
-  if (strcmp (s, "<meta-data>") != 0)
+  is.getline (s, 1024);
+  if (strcmp (s, "#Reactions") != 0)
   {
     nrCat = -1;
-    cerr << "No <meta-data> in file..." << endl;
+    cerr << "First line in input file should be '#Reactions'" << endl;
     goto End_of_Routine;
   }
   is.getline (s, 1024);
-  if (sscanf (s, "nrMolecules = %d", &nrMols) != 1)
-  {
-    nrCat = -1;
-    cerr << "No 'nrMolecules' in file..." << endl;
-    goto End_of_Routine;
-  }
-  if (nrMols < 0)
-  {
-    nrCat = -1;
-    cerr << "Invalid 'nrMolecules' in file..." << endl;
-    goto End_of_Routine;
-  }
-  is.getline (s, 1024);
-  if (sscanf (s, "nrFoodSet = %d", &nrFSet) != 1)
-  {
-    nrCat = -1;
-    cerr << "No 'nrFoodSet' in file..." << endl;
-    goto End_of_Routine;
-  }
-  if (nrFSet < 0)
-  {
-    nrCat = -1;
-    cerr << "Invalid 'nrFoodSet' in file..." << endl;
-    goto End_of_Routine;
-  }
-  is.getline  (s, 1024);
-  if (sscanf (s, "nrReactions = %d", &nrReacs) != 1)
-  {
-    nrCat = -1;
-    cerr << "No 'nrReactions' in file..." << endl;
-    goto End_of_Routine;
-  }
-  if (nrReacs < 0)
-  {
-    nrCat = -1;
-    cerr << "Invalid 'nrReactions' in file..." << endl;
-    goto End_of_Routine;
-  }
-
-  /*
-  ** Molecules.
-  */
-  s[0] = '\0';
-  while ((strlen (s) == 0) || (s[0] == '#'))
-  {
-    is.getline (s, 1024);
-  }
-  if (strcmp (s, "<molecules>") != 0)
-  {
-    nrCat = -1;
-    cerr << "No <molecules> in file..." << endl;
-    goto End_of_Routine;
-  }
-  for (i = 1; i <= nrMols; i++)
-  {
-    is.getline (s, 1024);
-    token1 = strtok (s, "\t");
-    token2 = strtok (NULL, "\t");
-    mol = new Molecule (token1, token2);
-    addMolecule (mol);
-  }
-
-  /*
-  ** Food set.
-  */
-  s[0] = '\0';
-  while ((strlen (s) == 0) || (s[0] == '#'))
-  {
-    is.getline (s, 1024);
-  }
-  if (strcmp (s, "<food set>") != 0)
-  {
-    nrCat = -1;
-    cerr << "No <food set> in file..." << endl;
-    goto End_of_Routine;
-  }
-  for (i = 1; i <= nrFSet; i++)
-  {
-    is.getline (s, 1024);
-    token1 = strtok (s, "\t");
-    token2 = strtok (NULL, "\t");
-    if ((mol = getMoleculeBySeq (token2)) == NULL)
-    {
-      nrCat = -1;
-      cerr << "Invalid molecule in food set " << i << "." << endl;
-      goto End_of_Routine;
-    }
-    addToFoodSet (mol);
-  }
-
-  /*
-  ** Reactions.
-  */
-  s[0] = '\0';
-  while ((strlen (s) == 0) || (s[0] == '#'))
-  {
-    is.getline (s, 1024);
-  }
-  if (strcmp (s, "<reactions>") != 0)
-  {
-    nrCat = -1;
-    cerr << "No <reactions> in file..." << endl;
-    goto End_of_Routine;
-  }
-  for (i = 1; i <= nrReacs; i++)
+  while (strcmp (s, "#Food") != 0)
   {
     /*
     ** Reaction ID.
     */
-    is.getline (s, 1024);
-    token1 = strtok_r (s, "\t", &saveptr1);
+    token1 = strtok_r (s, ":", &saveptr1);
     reac = new Reaction (token1);
     /*
     ** Reactants.
     */
-    token1 = strtok_r (NULL, "\t", &saveptr1);
+    token1 = strtok_r (NULL, ";", &saveptr1);
     token2 = strtok_r (token1, " ", &saveptr2);
     while (token2 != NULL)
     {
@@ -1278,10 +1167,8 @@ int ReacSet::readFromFile (ifstream& is)
 	token2 = strtok_r (NULL, " ", &saveptr2);
 	if ((mol = getMoleculeBySeq (token2)) == NULL)
 	{
-	  nrCat = -1;
-	  reac->getID (&id);
-	  cerr << "Invalid reactant " << token2 << " in reaction " << id << "." << endl;
-	  goto End_of_Routine;
+	  mol = new Molecule (token2);
+	  addMolecule (mol);
 	}
 	for (j = 1; j <= stoichiometry; j++)
 	{
@@ -1293,10 +1180,8 @@ int ReacSet::readFromFile (ifstream& is)
       {
 	if ((mol = getMoleculeBySeq (token2)) == NULL)
 	{
-	  nrCat = -1;
-	  reac->getID (&id);
-	  cerr << "Invalid reactant " << token2 << " in reaction " << id << "." << endl;
-	  goto End_of_Routine;
+	  mol = new Molecule (token2);
+	  addMolecule (mol);
 	}
 	reac->addReactant (mol);
 	token2 = strtok_r (NULL, " ", &saveptr2);
@@ -1319,10 +1204,8 @@ int ReacSet::readFromFile (ifstream& is)
 	token2 = strtok_r (NULL, " ", &saveptr2);
 	if ((mol = getMoleculeBySeq (token2)) == NULL)
 	{
-	  nrCat = -1;
-	  reac->getID (&id);
-	  cerr << "Invalid product " << token2 << " in reaction " << id << "." << endl;
-	  goto End_of_Routine;
+	  mol = new Molecule (token2);
+	  addMolecule (mol);
 	}
 	for (j = 1; j <= stoichiometry; j++)
 	{
@@ -1334,10 +1217,8 @@ int ReacSet::readFromFile (ifstream& is)
       {
 	if ((mol = getMoleculeBySeq (token2)) == NULL)
 	{
-	  nrCat = -1;
-	  reac->getID (&id);
-	  cerr << "Invalid product " << token2 << " in reaction " << id << "." << endl;
-	  goto End_of_Routine;
+	  mol = new Molecule (token2);
+	  addMolecule (mol);
 	}
 	reac->addProduct (mol);
 	token2 = strtok_r (NULL, " ", &saveptr2);
@@ -1346,7 +1227,7 @@ int ReacSet::readFromFile (ifstream& is)
     /*
     ** Catalysts.
     */
-    token1 = strtok_r (NULL, "\t", &saveptr1);
+    token1 = strtok_r (NULL, ";", &saveptr1);
     //cout << token1 << endl;
     if (strchr (token1, '(') != NULL)
     {
@@ -1368,10 +1249,8 @@ int ReacSet::readFromFile (ifstream& is)
       {
 	if ((mol = getMoleculeBySeq (token2)) == NULL)
 	{
-	  nrCat = -1;
-	  reac->getID (&id);
-	  cerr << "Invalid catalyst " << token2 << " in reaction " << id << "." << endl;
-	  goto End_of_Routine;
+	  mol = new Molecule (token2);
+	  addMolecule (mol);
 	}
 	reac->addCatalyst (mol);
 	nrCat++;
@@ -1379,24 +1258,26 @@ int ReacSet::readFromFile (ifstream& is)
       token2 = strtok_r (NULL, " ", &saveptr2);
     }
     /*
-    ** Rate constant.
-    */    
-    token1 = strtok_r (NULL, "\t", &saveptr1);
-    rate = -1.0;
-    if ((rate = strtod (token1, NULL)) < 0.0)
-    {
-      nrCat = -1;
-      reac->getID (&id);
-      cerr << "Invalid rate constant " << token1 << " in reaction " << id << "." << endl;
-      goto End_of_Routine;
-    }
-    reac->setRate (rate);
-    /*
-    ** Add the reaction to the reaction set.
+    ** Add the reaction to the reaction set and read the next line.
     */
     addReaction (reac);
+    is.getline (s, 1024);
   }
-
+  /*
+  ** Read the food set.
+  */
+  is.getline (s, 1024);
+  while (!is.eof ())
+  {
+    if ((mol = getMoleculeBySeq (s)) == NULL)
+    {
+      mol = new Molecule (s);
+      addMolecule (mol);
+    }
+    addToFoodSet (mol);
+    is.getline (s, 1024);
+  }
+  
   /*
   ** Reset the list iterators.
   */
@@ -1443,10 +1324,8 @@ void ReacSet::writeToFile (ofstream& os)
   while (itMolecule != molecules.end ())
   {
     mol = *itMolecule;
-    mol->getID (&s);
-    os << s << "\t";
     mol->getSequence (&s);
-    os << s << endl;
+    os << s << "\t" << s << endl;
     itMolecule++;
   }
   os << endl;
@@ -1459,10 +1338,8 @@ void ReacSet::writeToFile (ofstream& os)
   while (itFoodSet != foodSet.end ())
   {
     mol = *itFoodSet;
-    mol->getID (&s);
-    os << s << "\t";
     mol->getSequence (&s);
-    os << s << endl;
+    os << s << "\t" << s << endl;
     itFoodSet++;
   }
   os << endl;
@@ -1539,24 +1416,7 @@ void ReacSet::writeToFile (ofstream& os)
 	  mol = reac->getCatalystNext ();
 	}
       }
-      mol = reac->getInhibitorFirst ();
-      if (mol != NULL)
-      {
-	mol->getSequence (&s);
-	if (reac->getNrCatalysts () > 0)
-	{
-	  os << " ";
-	}
-	os << "-" << s;
-	mol = reac->getInhibitorNext ();
-	while (mol != NULL)
-	{
-	  mol->getSequence (&s);
-	  os << " -" << s;
-	  mol = reac->getInhibitorNext ();
-	}
-      }
-      if (reac->getNrCatalysts () + reac->getNrInhibitors () == 0)
+      if (reac->getNrCatalysts () == 0)
       {
 	os << " ";
       }
@@ -1564,7 +1424,7 @@ void ReacSet::writeToFile (ofstream& os)
       /*
       ** Reaction rate.
       */
-      os << reac->getRate () << endl;
+      os << "1" << endl;
     }
     itReaction++;
   }
@@ -1630,24 +1490,7 @@ void ReacSet::printReaction (Reaction *reac)
       mol = reac->getCatalystNext ();
     }
   }
-  mol = reac->getInhibitorFirst ();
-  if (mol != NULL)
-  {
-    mol->getSequence (&s);
-    if (reac->getNrCatalysts () > 0)
-    {
-      cout << " ";
-    }
-    cout << "-" << s;
-    mol = reac->getInhibitorNext ();
-    while (mol != NULL)
-    {
-      mol->getSequence (&s);
-      cout << " -" << s;
-      mol = reac->getInhibitorNext ();
-    }
-  }
-  if (reac->getNrCatalysts () + reac->getNrInhibitors () == 0)
+  if (reac->getNrCatalysts () == 0)
   {
     cout << "_";
   }
@@ -1735,7 +1578,7 @@ int ReacSet::addCatalystCompound (Reaction *reac, char *cat)
   */
   id.assign (CMP_PREFIX);
   id.append (cat);
-  mol = new Molecule (id, cat);
+  mol = new Molecule (cat);
   addMolecule (mol);
   reac->addCatalyst (mol);
   cmp_reac = new Reaction (id);
