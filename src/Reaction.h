@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 4 March 2026
+** Wim Hordijk   Last modified: 5 March 2026
 */
 
 #ifndef _REACTION_H_
@@ -9,6 +9,7 @@
 
 #include "def.h"
 #include "Molecule.h"
+#include <algorithm>
 #include <list>
 
 
@@ -53,13 +54,6 @@ class Reaction
   void      setDirection      (int dir);
   int       getDirection      ();
 
-  /*
-  ** Public member variables (these can be freely used by other methods for
-  ** their own purposes).
-  */
-  int  id;
-  bool isInSet, closureF;
-  
  private:
   /*
   ** Private member variables.

@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 4 March 2026
+** Wim Hordijk   Last modified: 5 March 2026
 */
 
 #include "Reaction.h"
@@ -23,8 +23,6 @@ Reaction::Reaction (string id)
   itReactant = reactants.begin ();
   itProduct = products.begin ();
   itCatalyst = catalysts.begin ();
-  this->id = 0;
-  isInSet = false;
   direction = UNI_DIR;
 }
 
@@ -177,21 +175,16 @@ bool Reaction::hasReactant (Molecule *mol)
   bool hasReac;
 
   /*
-  ** Check whether the molecule is a reactant.
-  **
-  ** Note that we are simply comparing pointers here, so it is assumed
-  ** that each molecule type is defined only once (as it should be)!
+  ** See if the given molecule is in the reactants list.
   */
-  hasReac = false;
-  itReactant = reactants.begin ();
-  while (itReactant != reactants.end ())
+  itReactant = find (reactants.begin (), reactants.end (), mol);
+  if (itReactant != reactants.end ())
   {
-    if (mol == *itReactant)
-    {
-      hasReac = true;
-      break;
-    }
-    itReactant++;
+    hasReac = true;
+  }
+  else
+  {
+    hasReac = false;
   }
 
   /*
@@ -351,21 +344,16 @@ bool Reaction::hasProduct (Molecule *mol)
   bool hasProd;
 
   /*
-  ** Check whether the molecule is a product.
-  **
-  ** Note that we are simply comparing pointers here, so it is assumed
-  ** that each molecule type is defined only once (as it should be)!
+  ** See if the given molecule is in the products list.
   */
-  hasProd = false;
-  itProduct = products.begin ();
-  while (itProduct != products.end ())
+  itProduct = find (products.begin (), products.end (), mol);
+  if (itProduct != products.end ())
   {
-    if (mol == *itProduct)
-    {
-      hasProd = true;
-      break;
-    }
-    itProduct++;
+    hasProd = true;
+  }
+  else
+  {
+    hasProd = false;
   }
 
   /*
@@ -525,21 +513,16 @@ bool Reaction::hasCatalyst (Molecule *mol)
   bool hasCat;
 
   /*
-  ** Check whether the molecule is a catalyst.
-  **
-  ** Note that we are simply comparing pointers here, so it is assumed
-  ** that each molecule type is defined only once (as it should be)!
+  ** See if the given molecule is in the catalysts list.
   */
-  hasCat = false;
-  itCatalyst = catalysts.begin ();
-  while (itCatalyst != catalysts.end ())
+  itCatalyst = find (catalysts.begin (), catalysts.end (), mol);
+  if (itCatalyst != catalysts.end ())
   {
-    if (mol == *itCatalyst)
-    {
-      hasCat = true;
-      break;
-    }
-    itCatalyst++;
+    hasCat = true;
+  }
+  else
+  {
+    hasCat = false;
   }
 
   /*

@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 4 March 2026
+** Wim Hordijk   Last modified: 5 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -10,7 +10,6 @@
 #include <fstream>
 #include <map>
 #include <vector>
-#include <algorithm>
 #include "Reaction.h"
 #include "def.h"
 
@@ -50,29 +49,32 @@ class ReacSet
   int       getNrReactions          ();
   Reaction *getReactionFirst        ();
   Reaction *getReactionNext         ();
+  bool      isInReacSet             (Reaction *reac);
   void      addReaction             (Reaction *reac);
   void      removeReaction          (Reaction *reac);
   void      clearReactions          ();
   int       findMaxRAF              ();
+  int       getNrRAFMolecules       ();
   Reaction *getMaxRAFFirst          ();
   Reaction *getMaxRAFNext           ();
   bool      isInMaxRAF              (Reaction *reac);
   bool      isInClosure             (Molecule *mol);
   int       readFromFile            (ifstream& is);
+  int       readFromFile2           (ifstream& is);
   void      writeToFile             (ofstream& os);
   void      printReaction           (Reaction *reac);
   void      printMaxRAF             (bool full);
-  int       nrRAFMolecules          ();
 
  private:
   /*
   ** Private member variables.
   */
   list<Molecule*>            molecules, foodSet, closure;
-  list<Reaction*>            reactions, RAF, maxRAF;
+  list<Reaction*>            reactions;
   list<Molecule*>::iterator  itMolecule, itFoodSet, itClosure;
-  list<Reaction*>::iterator  itReaction, itRAF;
+  list<Reaction*>::iterator  itReaction;
   map<string,Molecule*>      molMap;
+  ReacSet                   *maxRAF;
 
   /*
   ** Private member functions.

@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 4 March 2026
+** Wim Hordijk   Last modified: 5 March 2026
 */
 
 #include <iostream>
@@ -29,7 +29,7 @@ int main (int argc, char **argv)
   char      fileName[256];
   ifstream  ifs;
   ofstream  ofs;
-  ReacSet  *rSet, *rCopy;
+  ReacSet  *rSet;
 
   status = 0;
 
@@ -66,10 +66,8 @@ int main (int argc, char **argv)
   /*
   ** Write the reaction network to an output file.
   */
-  rCopy = new ReacSet ();
-  rCopy = rSet;
   ofs.open ("out.txt");
-  rCopy->writeToFile (ofs);
+  rSet->writeToFile (ofs);
   ofs.close ();
 
   /*

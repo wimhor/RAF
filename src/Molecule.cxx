@@ -1,7 +1,7 @@
 /*
 ** Molecule.cxx: Molecule class.
 **
-** Wim Hordijk   Last modified: 4 March 2026
+** Wim Hordijk   Last modified: 5 March 2026
 */
 
 #include "Molecule.h"
