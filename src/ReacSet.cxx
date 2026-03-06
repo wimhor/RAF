@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 5 March 2026
+** Wim Hordijk   Last modified: 6 March 2026
 */
 
 #include <string.h>
@@ -928,7 +928,7 @@ void ReacSet::computeClosure ()
   
   /*
   ** Print the closure (for debugging purposes).
-  */
+  **
   cout << "Closure (" << closure.size () << "): ";
   itMolecule = closure.begin ();
   while (itMolecule != closure.end ())
@@ -939,11 +939,15 @@ void ReacSet::computeClosure ()
     itMolecule++;
   }
   cout << endl;
+  */
 }
 
 
 /*
 ** readFromFile: Read a reaction set from an input file stream.
+**
+**   Note: This uses old-fashioned C character strings, as it allows for using
+**         the 'strtok' function which is quite useful here.
 **
 ** Parameters:
 **   - ifs: The input file stream to read from.
@@ -955,13 +959,13 @@ void ReacSet::computeClosure ()
 
 int ReacSet::readFromFile (ifstream& is)
 {
-  int       n, len, status, lineNr;
-  char      s[1024];
-  bool      bidirectional;
-  string    line, label, reactants, products, catalysts;
-  size_t    pos;
-  Molecule *mol;
-  Reaction *reac, *bReac;
+  int              n, status, lineNr;
+  bool             bidirectional;
+  char             line[2048], segment[1024], label[64], *token, *pch;
+  size_t           len;
+  Molecule        *mol;
+  Reaction        *reac, *bReac;
+  list<Molecule*>  catalyst;
 
   status = 0;
   lineNr = 0;
@@ -976,51 +980,52 @@ int ReacSet::readFromFile (ifstream& is)
   /*
   ** Read the reactions.
   */
-  is.getline (s, 1024);
+  is.getline (line, 1024);
   lineNr++;
-  if (strcmp (s, "#Reactions") != 0)
+  if (strcmp (line, "#Reactions") != 0)
   {
     status = -1;
     cerr << "First line in input file should be '#Reactions'" << endl;
     goto End_of_Routine;
   }
-  is.getline (s, 1024);
+  is.getline (line, 1024);
   lineNr++;
-  while (strcmp (s, "#Food") != 0)
+  while (strcmp (line, "#Food") != 0)
   {
-    line.assign (s);
     /*
-    ** Get reaction ID.
+    ** Get reaction label.
     */
-    if ((pos = line.find (':')) == string::npos)
+    if ((pch = strchr (line, ':')) == NULL)
     {
       status = -1;
       cerr << "No ':' present in line " << lineNr << " of input file." << endl;
       goto End_of_Routine;
     }
-    label.assign (line, 0, pos);
+    len = pch - line;
+    strncpy (label, line, len);
+    label[len] = '\0';
     reac = new Reaction (label);
-    line.erase (0, pos+1);
     /*
-    ** Reactants.
+    ** Get the reactants segment and point to the beginning of the products segment.
     */
-    if ((pos = line.find_first_of ("<=")) == string::npos)
+    if ((len = strcspn (pch+1, "<=")) == strlen (pch+1))
     {
       status = -1;
       cerr << "No valid reaction arrow in line " << lineNr << " of input file." << endl
 	   << "  (should be '=>' or '<=>')." << endl;
       goto End_of_Routine;
     }
-    reactants.assign (line, 0, pos);
-    if (line.compare (pos+1, 2, "=>") == 0)
+    strncpy (segment, pch+1, len);
+    segment[len] = '\0';
+    if (strncmp (pch+len+1, "=>", 2) == 0)
     {
       reac->setDirection (UNI_DIR);
-      len = 2;
+      pch += (len + 3);
     }
-    else if (line.compare (pos+1, 3, "<=>") == 0)
+    else if (strncmp (pch+len+1, "<=>", 3) == 0)
     {
       reac->setDirection (BI_DIR);
-      len = 3;
+      pch += (len + 4);
     }
     else
     {
@@ -1029,358 +1034,134 @@ int ReacSet::readFromFile (ifstream& is)
 	   << "  (should be '=>' or '<=>')." << endl;
       goto End_of_Routine;
     }
-    line.erase (0, pos+len);
-    
-    
-    
-    token1 = strtok_r (NULL, ";", &saveptr1);
-    token2 = strtok_r (token1, " ", &saveptr2);
-    while (token2 != NULL)
+    /*
+    ** Get the reactants. Stoichiometry can be included, but is ignored for now.
+    */
+    token = strtok (segment, "+");
+    while (token != NULL)
     {
-      n = -1;
-      if (strcmp (token2, "+") == 0)
+      if ((sscanf (token, "%d %s", &n, label) == 2) ||
+	  (sscanf (token, "%s", label) == 1))
       {
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-      else if (strcmp (token2, "=>") == 0)
-      {
-	reac->setDirection (UNI_DIR);
-	token2 = NULL;
-      }
-      else if (strcmp (token2, "<=>") == 0)
-      {
-	reac->setDirection (BI_DIR);
-	token2 = NULL;
-      }
-      else if ((sscanf (token2, "%d%c", &n, &c) != 2) && n != -1)
-      {
-	stoichiometry = n;
-	token2 = strtok_r (NULL, " ", &saveptr2);
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
+	if ((mol = getMoleculeBySeq (label)) == NULL)
 	{
-	  mol = new Molecule (token2);
+	  mol = new Molecule (label);
 	  addMolecule (mol);
 	}
-	for (j = 1; j <= stoichiometry; j++)
+	if (!reac->hasReactant (mol))
 	{
 	  reac->addReactant (mol);
 	}
-	token2 = strtok_r (NULL, " ", &saveptr2);
       }
       else
       {
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	reac->addReactant (mol);
-	token2 = strtok_r (NULL, " ", &saveptr2);
+	status = -1;
+	cerr << "Invalid reactant in line " << lineNr << " of input file." << endl;
+	goto End_of_Routine;	
       }
+      token = strtok (NULL, "+");
     }
     /*
-    ** Products.
+    ** Get the products segment and point to the beginning of the catalysts segment.
     */
-    token2 = strtok_r (NULL, " ", &saveptr2);
-    while (token2 != NULL)
+    if ((token = strchr (pch, '(')) == NULL)
     {
-      n = -1;
-      if (strcmp (token2, "+") == 0)
+      len = strlen (pch);
+      strcpy (segment, pch);
+    }
+    else
+    {
+      len = token - pch;
+      strncpy (segment, pch, len);
+      segment[len] = '\0';
+    }
+    pch += len;
+    /*
+    ** Get the products. Stoichiometry can be included, but is ignored for now.
+    */
+    token = strtok (segment, "+");
+    while (token != NULL)
+    {
+      if ((sscanf (token, "%d %s", &n, label) == 2) ||
+	  (sscanf (token, "%s", label) == 1))
       {
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-      else if ((sscanf (token2, "%d%c", &n, &c) != 2) && n != -1)
-      {
-	stoichiometry = n;
-	token2 = strtok_r (NULL, " ", &saveptr2);
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
+	if ((mol = getMoleculeBySeq (label)) == NULL)
 	{
-	  mol = new Molecule (token2);
+	  mol = new Molecule (label);
 	  addMolecule (mol);
 	}
-	for (j = 1; j <= stoichiometry; j++)
+	if (!reac->hasProduct (mol))
 	{
 	  reac->addProduct (mol);
 	}
-	token2 = strtok_r (NULL, " ", &saveptr2);
       }
       else
       {
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	reac->addProduct (mol);
-	token2 = strtok_r (NULL, " ", &saveptr2);
+	status = -1;
+	cerr << "Invalid product in line " << lineNr << " of input file." << endl;
+	goto End_of_Routine;	
       }
+      token = strtok (NULL, "+");
     }
     /*
-    ** Catalysts.
+    ** Get and parse the catalyst segment.
     */
-    token1 = strtok_r (NULL, ";", &saveptr1);
-    //cout << token1 << endl;
-    if (strchr (token1, '(') != NULL)
+    if ((token = strchr (pch, ')')) != NULL)
     {
-      token1 = parseCatalystRule (token1);
-    }
-    //cout << token1 << endl;
-    token2 = strtok_r (token1, " ", &saveptr2);
-    while (token2 != NULL)
-    {
-      if (strchr (token2, '&') != NULL)
+      len = token - pch;
+      strncpy (segment, pch+1, len-1);
+      segment[len-1] = '\0';
+      /*
+      ** Get the catalysts.
+      */
+      token = strtok (segment, " ");
+      while (token != NULL)
       {
-	if (addCatalystCompound (reac, token2) == -1)
+	if ((mol = getMoleculeBySeq (token)) == NULL)
 	{
-	  nrCat = -1;
-	  goto End_of_Routine;
-	}
-      }
-      else
-      {
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
+	  mol = new Molecule (token);
 	  addMolecule (mol);
 	}
-	reac->addCatalyst (mol);
-	nrCat++;
+	if (!reac->hasCatalyst (mol))
+	{
+	  reac->addCatalyst (mol);
+	}
+	token = strtok (NULL, " ");
       }
-      token2 = strtok_r (NULL, " ", &saveptr2);
     }
     /*
     ** Add the reaction to the reaction set and read the next line.
     */
     addReaction (reac);
-    is.getline (s, 1024);
+    is.getline (line, 1024);
   }
   /*
   ** Read the food set.
   */
-  is.getline (s, 1024);
+  is.getline (label, 1024);
   while (!is.eof ())
   {
-    if ((mol = getMoleculeBySeq (s)) == NULL)
+    if ((mol = getMoleculeBySeq (label)) == NULL)
     {
-      mol = new Molecule (s);
+      mol = new Molecule (label);
       addMolecule (mol);
     }
     addToFoodSet (mol);
-    is.getline (s, 1024);
+    is.getline (label, 1024);
   }
   
   /*
   ** Reset the list iterators.
   */
   itMolecule = molecules.begin ();
+  itFoodSet = foodSet.begin ();
   itReaction = reactions.begin ();
-
-  /*
-  ** Return the status.
-  */
- End_of_Routine:
-  return (nrCat);
-}
-
-
-/*
-** readFromFile2: Read a reaction set from an input file stream (original version).
-**
-** Parameters:
-**   - ifs: The input file stream to read from.
-**
-** Returns:
-**   - If reaction set could be read successfully:  The number of catalysis events.
-**   - Otherwise:                                  -1.
-*/
-
-int ReacSet::readFromFile2 (ifstream& is)
-{
-  int       i, j, nrMols, nrReacs, nrFSet, n, nrCat, stoichiometry;
-  char      s[1024], seq[1024], *token1, *token2, *saveptr1, *saveptr2, c;
-  float     rate;
-  bool      bidirectional;
-  string    id;
-  Molecule *mol;
-  Reaction *reac, *bReac;
-
-  nrCat = 0;
-
-  /*
-  ** Clear the current reaction set.
-  */
-  molecules.clear ();
-  reactions.clear ();
-  foodSet.clear ();
-
-  /*
-  ** Read the reactions.
-  */
-  is.getline (s, 1024);
-  if (strcmp (s, "#Reactions") != 0)
-  {
-    nrCat = -1;
-    cerr << "First line in input file should be '#Reactions'" << endl;
-    goto End_of_Routine;
-  }
-  is.getline (s, 1024);
-  while (strcmp (s, "#Food") != 0)
-  {
-    /*
-    ** Reaction ID.
-    */
-    token1 = strtok_r (s, ":", &saveptr1);
-    reac = new Reaction (token1);
-    /*
-    ** Reactants.
-    */
-    token1 = strtok_r (NULL, ";", &saveptr1);
-    token2 = strtok_r (token1, " ", &saveptr2);
-    while (token2 != NULL)
-    {
-      n = -1;
-      if (strcmp (token2, "+") == 0)
-      {
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-      else if (strcmp (token2, "=>") == 0)
-      {
-	reac->setDirection (UNI_DIR);
-	token2 = NULL;
-      }
-      else if (strcmp (token2, "<=>") == 0)
-      {
-	reac->setDirection (BI_DIR);
-	token2 = NULL;
-      }
-      else if ((sscanf (token2, "%d%c", &n, &c) != 2) && n != -1)
-      {
-	stoichiometry = n;
-	token2 = strtok_r (NULL, " ", &saveptr2);
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	for (j = 1; j <= stoichiometry; j++)
-	{
-	  reac->addReactant (mol);
-	}
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-      else
-      {
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	reac->addReactant (mol);
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-    }
-    /*
-    ** Products.
-    */
-    token2 = strtok_r (NULL, " ", &saveptr2);
-    while (token2 != NULL)
-    {
-      n = -1;
-      if (strcmp (token2, "+") == 0)
-      {
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-      else if ((sscanf (token2, "%d%c", &n, &c) != 2) && n != -1)
-      {
-	stoichiometry = n;
-	token2 = strtok_r (NULL, " ", &saveptr2);
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	for (j = 1; j <= stoichiometry; j++)
-	{
-	  reac->addProduct (mol);
-	}
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-      else
-      {
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	reac->addProduct (mol);
-	token2 = strtok_r (NULL, " ", &saveptr2);
-      }
-    }
-    /*
-    ** Catalysts.
-    */
-    token1 = strtok_r (NULL, ";", &saveptr1);
-    //cout << token1 << endl;
-    if (strchr (token1, '(') != NULL)
-    {
-      token1 = parseCatalystRule (token1);
-    }
-    //cout << token1 << endl;
-    token2 = strtok_r (token1, " ", &saveptr2);
-    while (token2 != NULL)
-    {
-      if (strchr (token2, '&') != NULL)
-      {
-	if (addCatalystCompound (reac, token2) == -1)
-	{
-	  nrCat = -1;
-	  goto End_of_Routine;
-	}
-      }
-      else
-      {
-	if ((mol = getMoleculeBySeq (token2)) == NULL)
-	{
-	  mol = new Molecule (token2);
-	  addMolecule (mol);
-	}
-	reac->addCatalyst (mol);
-	nrCat++;
-      }
-      token2 = strtok_r (NULL, " ", &saveptr2);
-    }
-    /*
-    ** Add the reaction to the reaction set and read the next line.
-    */
-    addReaction (reac);
-    is.getline (s, 1024);
-  }
-  /*
-  ** Read the food set.
-  */
-  is.getline (s, 1024);
-  while (!is.eof ())
-  {
-    if ((mol = getMoleculeBySeq (s)) == NULL)
-    {
-      mol = new Molecule (s);
-      addMolecule (mol);
-    }
-    addToFoodSet (mol);
-    is.getline (s, 1024);
-  }
   
   /*
-  ** Reset the list iterators.
-  */
-  itMolecule = molecules.begin ();
-  itReaction = reactions.begin ();
-
-  /*
   ** Return the status.
   */
  End_of_Routine:
-  return (nrCat);
+  return (status);
 }
 
 
@@ -1633,104 +1414,6 @@ void ReacSet::printMaxRAF (bool full)
 int ReacSet::getNrRAFMolecules ()
 {
   return (closure.size ());
-}
-
-
-/*
-** addCatalystCompound: Add a catalyst compound.
-**
-** Parameters:
-**   reac: The reaction to add the catalyst compound to.
-**   cat:  The catalyst compound.
-**
-** Returns:
-**   If everything went fine:  0.
-**   Otherwise:               -1.
-*/
-
-int ReacSet::addCatalystCompound (Reaction *reac, char *cat)
-{
-  int       status;
-  char     *token, *saveptr;
-  string    id;
-  Molecule *mol;
-  Reaction *cmp_reac;
-
-  status = 0;
-
-  /*
-  ** Add a new molecule and reaction to create the catalyst compound, and add
-  ** it as a catalyst to the current reaction.
-  */
-  id.assign (CMP_PREFIX);
-  id.append (cat);
-  mol = new Molecule (cat);
-  addMolecule (mol);
-  reac->addCatalyst (mol);
-  cmp_reac = new Reaction (id);
-  cmp_reac->addProduct (mol);
-  cmp_reac->addCatalyst (mol);
-  token = strtok_r (cat, "&", &saveptr);
-  while (token != NULL)
-  {
-    if ((mol = getMoleculeBySeq (token)) == NULL)
-    {
-      status = -1;
-      reac->getID (&id);
-      cerr << "Invalid catalyst " << token << " in reaction " << id << "." << endl;
-      goto End_of_Routine;
-    }
-    cmp_reac->addReactant (mol);
-    token = strtok_r (NULL, "&", &saveptr);
-  }
-  addReaction (cmp_reac);
-  
- End_of_Routine:
-  /*
-  ** Return the status.
-  */
-  return (status);
-}
-
-
-/*
-** parseCatalystRule: Parse a complex catalyst rule into "or" elements.
-**
-** Parameters:
-**   - rule: The comples rule to parse.
-**
-** Returns:
-**   - A pointer to a newly allocated string containing the parsed rule.
-*/
-
-char *ReacSet::parseCatalystRule (char *rule)
-{
-  char *parsed, or_part[1024], and_part[1024], *p, *token, *saveptr;
-
-  /*
-  ** Allocate memory for the parsed rule.
-  */
-  parsed = new char[1024];
-  parsed[0] = '\0';
-  p = strchr (rule, ')');
-  strcpy (and_part, p+1);
-  strncpy (p, "\0", 1);
-  strcpy (or_part, rule+1);
-  //cout << or_part << " " << and_part << endl;
-  token = strtok_r (or_part, " ", &saveptr);
-  while (token != NULL)
-  {
-    strcat (parsed, token);
-    strcat (parsed, and_part);
-    token = strtok_r (NULL, " ", &saveptr);
-    if (token != NULL)
-    {
-      strcat (parsed, " ");
-    }
-  }
-  //cout << parsed << endl;
-
-  return (parsed);
 }
 
 

@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 5 March 2026
+** Wim Hordijk   Last modified: 6 March 2026
 */
 
 #ifndef _REACTION_H_

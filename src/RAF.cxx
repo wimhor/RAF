@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 5 March 2026
+** Wim Hordijk   Last modified: 6 March 2026
 */
 
 #include <iostream>

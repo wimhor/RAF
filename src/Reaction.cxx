@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 5 March 2026
+** Wim Hordijk   Last modified: 6 March 2026
 */
 
 #include "Reaction.h"
