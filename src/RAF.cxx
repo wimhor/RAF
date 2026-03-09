@@ -1,7 +1,7 @@
 /*
-** RAF.cxx: Find the maxRAF in a given reaction network.
+** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 6 March 2026
+** Wim Hordijk   Last modified: 9 March 2026
 */
 
 #include <iostream>
@@ -71,10 +71,14 @@ int main (int argc, char **argv)
   ofs.close ();
 
   /*
-  ** Find the maxRAF.
+  ** Find the maxRAF and the CAF.
   */
   rSize = rSet->findMaxRAF ();
+  cout << "maxRAF:" << endl;
   rSet->printMaxRAF (false);
+  rSize = rSet->findCAF ();
+  cout << "CAF:" << endl;
+  rSet->printCAF (false);
 
  End_of_Routine:
   /*

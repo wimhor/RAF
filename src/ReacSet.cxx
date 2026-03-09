@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 6 March 2026
+** Wim Hordijk   Last modified: 9 March 2026
 */
 
 #include <string.h>
@@ -131,8 +131,7 @@ Molecule *ReacSet::getMoleculeNext ()
 
 
 /*
-** getMoleculeBySeq: Get an element from the molecule list by its sequence
-**                   string.
+** getMoleculeBySeq: Get an element from the molecule list by its sequence string.
 **
 ** Parameters:
 **   - seq: The molecule sequence (a string).
@@ -552,14 +551,14 @@ void ReacSet::clearReactions ()
 
 
 /*
-** applyRAF: Apply the RAF algorithm to the current reaction set. The resulting
-**           reaction set is the maxRAF, or is empty if there is no RAF.
+** applyRAFalgo: Apply the RAF algorithm to the current reaction set. The resulting
+**               reaction set is the maxRAF, or is empty if there is no RAF.
 **
 ** Returns:
 **   The size of the found RAF set (zero if empty).
 */
 
-int ReacSet::applyRAF ()
+int ReacSet::applyRAFalgo ()
 {
   bool      reactionsRemoved, remove;
   Molecule *mol;
@@ -575,7 +574,7 @@ int ReacSet::applyRAF ()
     /*
     ** Compute the closure of the food set.
     */
-    computeClosure ();
+    computeClosureF ();
     /*
     ** Remove all reactions for which not all the reactants and at least one
     ** catalyst are in the closure of the food set.
@@ -595,7 +594,7 @@ int ReacSet::applyRAF ()
       mol = reac->getReactantFirst ();
       while (mol != NULL)
       {
-	if (!isInClosure (mol))
+	if (!isInClosureF (mol))
 	{
 	  remove = true;
 	  break;
@@ -611,7 +610,7 @@ int ReacSet::applyRAF ()
 	mol = reac->getCatalystFirst ();
 	while (mol != NULL)
 	{
-	  if (isInClosure (mol))
+	  if (isInClosureF (mol))
 	  {
 	    remove = false;
 	    break;
@@ -664,7 +663,7 @@ int ReacSet::findMaxRAF ()
   /*
   ** Apply the RAF algorithm on the new set.
   */
-  size = maxRAF->applyRAF ();
+  size = maxRAF->applyRAFalgo ();
 
   /*
   ** Return the size of the maximal RAF set.
@@ -762,7 +761,7 @@ bool ReacSet::isInMaxRAF (Reaction *reac)
 
 
 /*
-** isInClosure: Check whether a molecule is in the current closure of the food set.
+** isInClosureF: Check whether a molecule is in the current closure of the food set.
 **
 ** Parameters:
 **   - mol: The molecule to check for.
@@ -772,7 +771,7 @@ bool ReacSet::isInMaxRAF (Reaction *reac)
 **   - Otherwise:                         false.
 */
 
-bool ReacSet::isInClosure (Molecule *mol)
+bool ReacSet::isInClosureF (Molecule *mol)
 {
   bool                      inClosure;
   list<Molecule*>::iterator itMol;
@@ -798,10 +797,10 @@ bool ReacSet::isInClosure (Molecule *mol)
 
 
 /*
-** computeClosure: Compute the closure of the food set.
+** computeClosureF: Compute the closure of the food set.
 */
 
-void ReacSet::computeClosure ()
+void ReacSet::computeClosureF ()
 {
   Molecule                  *mol, *r, *p;
   Reaction                  *reac;
@@ -846,7 +845,7 @@ void ReacSet::computeClosure ()
       r = reac->getReactantFirst ();
       while (r != NULL)
       {
-	if (!isInClosure (r))
+	if (!isInClosureF (r))
 	{
 	  apply = false;
 	  break;
@@ -862,7 +861,7 @@ void ReacSet::computeClosure ()
 	p = reac->getProductFirst ();
 	while (p != NULL)
 	{
-	  if (!isInClosure (p))
+	  if (!isInClosureF (p))
 	  {
 	    closure.push_back (p);
 	  }
@@ -891,7 +890,7 @@ void ReacSet::computeClosure ()
 	p = reac->getProductFirst ();
 	while (p != NULL)
 	{
-	  if (!isInClosure (p))
+	  if (!isInClosureF (p))
 	  {
 	    apply = false;
 	    break;
@@ -908,7 +907,7 @@ void ReacSet::computeClosure ()
 	r = reac->getReactantFirst ();
 	while (r != NULL)
 	{
-	  if (!isInClosure (r))
+	  if (!isInClosureF (r))
 	  {
 	    closure.push_back (r);
 	  }
@@ -927,7 +926,7 @@ void ReacSet::computeClosure ()
   }
   
   /*
-  ** Print the closure (for debugging purposes).
+  ** Print the closure (for debugging purposes only).
   **
   cout << "Closure (" << closure.size () << "): ";
   itMolecule = closure.begin ();
@@ -946,8 +945,8 @@ void ReacSet::computeClosure ()
 /*
 ** readFromFile: Read a reaction set from an input file stream.
 **
-**   Note: This uses old-fashioned C character strings, as it allows for using
-**         the 'strtok' function which is quite useful here.
+** Note: This function uses old-fashioned C character strings, as it allows for using
+**       the 'strtok' function which is quite useful here.
 **
 ** Parameters:
 **   - ifs: The input file stream to read from.
@@ -1414,6 +1413,249 @@ void ReacSet::printMaxRAF (bool full)
 int ReacSet::getNrRAFMolecules ()
 {
   return (closure.size ());
+}
+
+
+/*
+** findCAF: Find the CAF in the current reaction set.
+**
+** Returns:
+**   - The size of the CAF set (zero if empty).
+*/
+
+int ReacSet::findCAF ()
+{
+  int size;
+
+  /*
+  ** Create a new reaction set to contain the CAF.
+  */
+  CAF = new ReacSet ();
+  CAF = this;
+  
+  /*
+  ** Apply the CAF algorithm.
+  */
+  size = CAF->applyCAFalgo ();
+
+  /*
+  ** Return the size of the CAF.
+  */
+  return (size);
+}
+
+
+/*
+** applyCAFalgo: Apply the CAF algorithm to the current reaction set.
+**
+** Returns:
+**   - The size of the resulting CAF set.
+*/
+
+int ReacSet::applyCAFalgo ()
+{
+  int                        size;
+  bool                       reacsAdded, apply;
+  Molecule                  *mol;
+  Reaction                  *reac;
+  list<Reaction*>            tmpCAF;
+  list<Reaction*>::iterator  itCAF;
+
+  /*
+  ** Clear the closure and copy all food molecules to it.
+  */
+  closure.clear ();
+  itFoodSet = foodSet.begin ();
+  while (itFoodSet != foodSet.end ())
+  {
+    mol = *itFoodSet;
+    closure.push_back (mol);
+    itFoodSet++;
+  }
+
+  /*
+  ** Iteratively add reactions that can proceed catalyzed and their products.
+  */
+  reacsAdded = true;
+  while (reacsAdded)
+  {
+    reacsAdded = false;
+    /*
+    ** Check each reaction to see if it can proceed catalyzed.
+    */
+    itReaction = reactions.begin ();
+    while (itReaction != reactions.end ())
+    {
+      /*
+      ** If the reaction has not already been applied, check if it can now.
+      */
+      reac = *itReaction;
+      itCAF = find (tmpCAF.begin (), tmpCAF.end (), reac);
+      if (itCAF == tmpCAF.end ())
+      {
+	/*
+	** Check all reactants.
+	*/
+	apply = true;
+	mol = reac->getReactantFirst ();
+	while (mol != NULL)
+	{
+	  if (!isInClosureF (mol))
+	  {
+	    apply = false;
+	    break;
+	  }
+	  mol = reac->getReactantNext ();
+	}
+	/*
+	** Check catalysts, if still necessary.
+	*/
+	if (apply)
+	{
+	  apply = false;
+	  mol = reac->getCatalystFirst ();
+	  while (mol != NULL)
+	  {
+	    if (isInClosureF (mol))
+	    {
+	      apply = true;
+	      break;
+	    }
+	    mol = reac->getCatalystNext ();
+	  }
+	}
+	/*
+	** Apply the reaction, if so indicated. If not, check the reverse
+	** direction, if relevant.
+	*/
+	if (apply)
+	{
+	  /*
+	  ** Add the reaction to the CAF and its products to the closure.
+	  */
+	  tmpCAF.push_back (reac);
+	  mol = reac->getProductFirst ();
+	  while (mol != NULL)
+	  {
+	    if (!isInClosureF (mol))
+	    {
+	      closure.push_back (mol);
+	    }
+	    mol = reac->getProductNext ();
+	  }
+	  reacsAdded = true;
+	}
+	else if (reac->getDirection () == BI_DIR)
+	{
+	  /*
+	  ** Check all products.
+	  */
+	  apply = true;
+	  mol = reac->getProductFirst ();
+	  while (mol != NULL)
+	  {
+	    if (!isInClosureF (mol))
+	    {
+	      apply = false;
+	      break;
+	    }
+	    mol = reac->getProductNext ();
+	  }
+	  /*
+	  ** Check catalysts, if still necessary.
+	  */
+	  if (apply)
+	  {
+	    apply = false;
+	    mol = reac->getCatalystFirst ();
+	    while (mol != NULL)
+	    {
+	      if (isInClosureF (mol))
+	      {
+		apply = true;
+		break;
+	      }
+	      mol = reac->getCatalystNext ();
+	    }
+	  }
+	  /*
+	  ** Apply the reaction, if so indicated.
+	  */
+	  if (apply)
+	  {
+	    /*
+	    ** Add the reaction to the CAF and its reactants to the closure.
+	    */
+	    tmpCAF.push_back (reac);
+	    mol = reac->getReactantFirst ();
+	    while (mol != NULL)
+	    {
+	      if (!isInClosureF (mol))
+	      {
+		closure.push_back (mol);
+	      }
+	      mol = reac->getReactantNext ();
+	    }
+	    reacsAdded = true;
+	  }
+	}
+      }
+      /*
+      ** Get the next reaction.
+      */
+      itReaction++;
+    }
+  }
+
+  /*
+  ** Clear the current reaction set and copy the temporary CAF list to it.
+  */
+  reactions.clear ();
+  itCAF = tmpCAF.begin ();
+  while (itCAF != tmpCAF.end ())
+  {
+    reac = *itCAF;
+    reactions.push_back (reac);
+    itCAF++;
+  }
+
+  /*
+  ** Return the size of the CAF.
+  */
+  return (reactions.size ());
+}
+
+
+/*
+** printCAF: Print the CAF set.
+**
+** Parameters:
+**   full: Boolean indicating whether to print the full reaction ('true') or
+**         only the reaction IDs ('false').
+*/
+
+void ReacSet::printCAF (bool full)
+{
+  string    s;
+  Reaction *reac;
+
+  /*
+  ** Print the reactions in the CAF.
+  */
+  reac = CAF->getReactionFirst ();
+  while (reac != NULL)
+  {
+    if (full)
+    {
+      printReaction (reac);
+    }
+    else
+    {
+      reac->getID (&s);
+      cout << s << endl;
+    }
+    reac = CAF->getReactionNext ();
+  }
 }
 
 

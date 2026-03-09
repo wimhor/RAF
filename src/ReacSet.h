@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 6 March 2026
+** Wim Hordijk   Last modified: 9 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -26,43 +26,45 @@ class ReacSet
   /*
   ** Constructors and destructors.
   */
-  ReacSet  ();
+   ReacSet ();
   ~ReacSet ();
 
   /*
   ** Public member functions.
   */
-  int       getNrMolecules          ();
-  Molecule *getMoleculeFirst        ();
-  Molecule *getMoleculeNext         ();
-  Molecule *getMoleculeBySeq        (string seq);
-  void      addMolecule             (Molecule *mol);
-  void      removeMolecule          (Molecule *mol);
-  void      clearMolecules          ();
-  int       getNrFoodMolecules      ();
-  Molecule *getFoodSetFirst         ();
-  Molecule *getFoodSetNext          ();
-  bool      isInFoodSet             (Molecule *mol);
-  void      addToFoodSet            (Molecule *mol);
-  void      removeFromFoodSet       (Molecule *mol);
-  void      clearFoodSet            ();
-  int       getNrReactions          ();
-  Reaction *getReactionFirst        ();
-  Reaction *getReactionNext         ();
-  bool      isInReacSet             (Reaction *reac);
-  void      addReaction             (Reaction *reac);
-  void      removeReaction          (Reaction *reac);
-  void      clearReactions          ();
-  int       findMaxRAF              ();
-  int       getNrRAFMolecules       ();
-  Reaction *getMaxRAFFirst          ();
-  Reaction *getMaxRAFNext           ();
-  bool      isInMaxRAF              (Reaction *reac);
-  bool      isInClosure             (Molecule *mol);
-  int       readFromFile            (ifstream& is);
-  void      writeToFile             (ofstream& os);
-  void      printReaction           (Reaction *reac);
-  void      printMaxRAF             (bool full);
+  int       getNrMolecules     ();
+  Molecule *getMoleculeFirst   ();
+  Molecule *getMoleculeNext    ();
+  Molecule *getMoleculeBySeq   (string seq);
+  void      addMolecule        (Molecule *mol);
+  void      removeMolecule     (Molecule *mol);
+  void      clearMolecules     ();
+  int       getNrFoodMolecules ();
+  Molecule *getFoodSetFirst    ();
+  Molecule *getFoodSetNext     ();
+  bool      isInFoodSet        (Molecule *mol);
+  void      addToFoodSet       (Molecule *mol);
+  void      removeFromFoodSet  (Molecule *mol);
+  void      clearFoodSet       ();
+  int       getNrReactions     ();
+  Reaction *getReactionFirst   ();
+  Reaction *getReactionNext    ();
+  bool      isInReacSet        (Reaction *reac);
+  void      addReaction        (Reaction *reac);
+  void      removeReaction     (Reaction *reac);
+  void      clearReactions     ();
+  int       findMaxRAF         ();
+  int       getNrRAFMolecules  ();
+  Reaction *getMaxRAFFirst     ();
+  Reaction *getMaxRAFNext      ();
+  bool      isInMaxRAF         (Reaction *reac);
+  bool      isInClosureF       (Molecule *mol);
+  int       findCAF            ();
+  int       readFromFile       (ifstream& is);
+  void      writeToFile        (ofstream& os);
+  void      printReaction      (Reaction *reac);
+  void      printMaxRAF        (bool full);
+  void      printCAF           (bool full);
 
  private:
   /*
@@ -73,13 +75,14 @@ class ReacSet
   list<Molecule*>::iterator  itMolecule, itFoodSet, itClosure;
   list<Reaction*>::iterator  itReaction;
   map<string,Molecule*>      molMap;
-  ReacSet                   *maxRAF;
+  ReacSet                   *maxRAF, *CAF;
 
   /*
   ** Private member functions.
   */
-  int   applyRAF              ();
-  void  computeClosure        ();
+  int  applyRAFalgo    ();
+  int  applyCAFalgo    ();
+  void computeClosureF ();
 };
 
 
