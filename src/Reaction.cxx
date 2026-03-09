@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 6 March 2026
+** Wim Hordijk   Last modified: 9 March 2026
 */
 
 #include "Reaction.h"
@@ -63,6 +63,8 @@ Reaction::~Reaction ()
     itCatalyst++;
   }
   catalysts.clear ();
+  reacStoich.clear ();
+  prodStoich.clear ();
 }
 
 
@@ -195,19 +197,56 @@ bool Reaction::hasReactant (Molecule *mol)
 
 
 /*
+** getReacStoich: Get the stoichiometry of a reactant.
+**
+** Parameters:
+**   - mol: A molecule type.
+**
+** Returns:
+**   - If the molecule is a reactant: Its stoichiometry.
+**   - Otherwise:                     0.
+*/
+
+int Reaction::getReacStoich (Molecule *mol)
+{
+  int n;
+
+  /*
+  ** Get the stoichiometry of the given reactant.
+  */
+  itReactant = find (reactants.begin (), reactants.end (), mol);
+  if (itReactant != reactants.end ())
+  {
+    n = reacStoich[mol];
+  }
+  else
+  {
+    n = 0;
+  }
+
+  /*
+  ** Return the result.
+  */
+  return (n);
+}
+
+
+/*
 ** addReactant: Add a reactant to the list.
 **
 ** Parameters:
 **   - mol: The molecule to add.
+**   - n:   The stoichiometry of the reactant (default = 1).
 */
 
-void Reaction::addReactant (Molecule *mol)
+void Reaction::addReactant (Molecule *mol, int n)
 {
   /*
   ** Add the reactant to the list.
   */
   reactants.push_back (mol);
   mol->addAsReactant (this);
+  reacStoich[mol] = n;
 }
 
 
@@ -225,6 +264,7 @@ void Reaction::removeReactant (Molecule *mol)
   */
   reactants.remove (mol);
   mol->removeAsReactant (this);
+  reacStoich.erase (mol);
 }
 
 
@@ -248,6 +288,7 @@ void Reaction::clearReactants ()
   }
   reactants.clear ();
   itReactant = reactants.begin ();
+  reacStoich.clear ();
 }
 
 
@@ -364,19 +405,56 @@ bool Reaction::hasProduct (Molecule *mol)
 
 
 /*
+** getProdStoich: Get the stoichiometry of a product.
+**
+** Parameters:
+**   - mol: A molecule type.
+**
+** Returns:
+**   - If the molecule is a product: Its stoichiometry.
+**   - Otherwise:                    0.
+*/
+
+int Reaction::getProdStoich (Molecule *mol)
+{
+  int n;
+
+  /*
+  ** Get the stoichiometry of the given product.
+  */
+  itProduct = find (products.begin (), products.end (), mol);
+  if (itProduct != products.end ())
+  {
+    n = prodStoich[mol];
+  }
+  else
+  {
+    n = 0;
+  }
+
+  /*
+  ** Return the result.
+  */
+  return (n);
+}
+
+
+/*
 ** addProduct: Add a product to the list.
 **
 ** Parameters:
 **   - mol: The molecule to add.
+**   - n:   The stoichiometry of the product (default = 1).
 */
 
-void Reaction::addProduct (Molecule *mol)
+void Reaction::addProduct (Molecule *mol, int n)
 {
   /*
   ** Add the product to the list.
   */
   products.push_back (mol);
   mol->addAsProduct (this);
+  prodStoich[mol] = n;
 }
 
 
@@ -394,6 +472,7 @@ void Reaction::removeProduct (Molecule *mol)
   */
   products.remove (mol);
   mol->removeAsProduct (this);
+  prodStoich.erase (mol);
 }
 
 
@@ -417,6 +496,7 @@ void Reaction::clearProducts ()
   }
   products.clear ();
   itProduct = products.begin ();
+  prodStoich.clear ();
 }
 
 

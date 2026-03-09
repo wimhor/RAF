@@ -8,7 +8,6 @@
 #define _REACSET_H_
 
 #include <fstream>
-#include <map>
 #include <vector>
 #include "Reaction.h"
 #include "def.h"

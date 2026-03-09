@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 6 March 2026
+** Wim Hordijk   Last modified: 9 March 2026
 */
 
 #ifndef _REACTION_H_
@@ -11,6 +11,7 @@
 #include "Molecule.h"
 #include <algorithm>
 #include <list>
+#include <map>
 
 
 /*
@@ -34,14 +35,16 @@ class Reaction
   Molecule *getReactantFirst  ();
   Molecule *getReactantNext   ();
   bool      hasReactant       (Molecule *mol);
-  void      addReactant       (Molecule *mol);
+  int       getReacStoich     (Molecule *mol);
+  void      addReactant       (Molecule *mol, int n=1);
   void      removeReactant    (Molecule *mol);
   void      clearReactants    ();
   int       getNrProducts     ();
   Molecule *getProductFirst   ();
   Molecule *getProductNext    ();
   bool      hasProduct        (Molecule *mol);
-  void      addProduct        (Molecule *mol);
+  int       getProdStoich     (Molecule *mol);
+  void      addProduct        (Molecule *mol, int n=1);
   void      removeProduct     (Molecule *mol);
   void      clearProducts     ();
   int       getNrCatalysts    ();
@@ -62,6 +65,7 @@ class Reaction
   int                       direction;
   list<Molecule*>           reactants, products, catalysts;
   list<Molecule*>::iterator itReactant, itProduct, itCatalyst;
+  map<Molecule*,int>        reacStoich, prodStoich;
 };
 
 

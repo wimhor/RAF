@@ -46,6 +46,10 @@ ReacSet::~ReacSet ()
   {
     delete maxRAF;
   }
+  if (CAF != NULL)
+  {
+    delete CAF;
+  }
 }
 
 
@@ -1034,11 +1038,12 @@ int ReacSet::readFromFile (ifstream& is)
       goto End_of_Routine;
     }
     /*
-    ** Get the reactants. Stoichiometry can be included, but is ignored for now.
+    ** Get the reactants and (optinally) their stoichiometry.
     */
     token = strtok (segment, "+");
     while (token != NULL)
     {
+      n = 1;
       if ((sscanf (token, "%d %s", &n, label) == 2) ||
 	  (sscanf (token, "%s", label) == 1))
       {
@@ -1049,7 +1054,7 @@ int ReacSet::readFromFile (ifstream& is)
 	}
 	if (!reac->hasReactant (mol))
 	{
-	  reac->addReactant (mol);
+	  reac->addReactant (mol, n);
 	}
       }
       else
@@ -1081,6 +1086,7 @@ int ReacSet::readFromFile (ifstream& is)
     token = strtok (segment, "+");
     while (token != NULL)
     {
+      n = 1;
       if ((sscanf (token, "%d %s", &n, label) == 2) ||
 	  (sscanf (token, "%s", label) == 1))
       {
@@ -1091,7 +1097,7 @@ int ReacSet::readFromFile (ifstream& is)
 	}
 	if (!reac->hasProduct (mol))
 	{
-	  reac->addProduct (mol);
+	  reac->addProduct (mol, n);
 	}
       }
       else
@@ -1173,6 +1179,7 @@ int ReacSet::readFromFile (ifstream& is)
 
 void ReacSet::writeToFile (ofstream& os)
 {
+  int       n;
   string    s;
   Molecule *mol;
   Reaction *reac;
@@ -1234,13 +1241,24 @@ void ReacSet::writeToFile (ofstream& os)
       mol = reac->getReactantFirst ();
       if (mol != NULL)
       {
+	n = reac->getReacStoich (mol);
+	if (n > 1)
+	{
+	  os << n << " ";
+	}
 	mol->getSequence (&s);
 	os << s << " ";
 	mol = reac->getReactantNext ();
 	while (mol != NULL)
 	{
+	  os << "+ ";
+	  n = reac->getReacStoich (mol);
+	  if (n > 1)
+	  {
+	    os << n << " ";
+	  }
 	  mol->getSequence (&s);
-	  os << "+ " << s << " ";
+	  os << s << " ";
 	  mol = reac->getReactantNext ();
 	}
       }
@@ -1261,13 +1279,24 @@ void ReacSet::writeToFile (ofstream& os)
       mol = reac->getProductFirst ();
       if (mol != NULL)
       {
+	n = reac->getProdStoich (mol);
+	if (n > 1)
+	{
+	  os << n << " ";
+	}
 	mol->getSequence (&s);
 	os << s;
 	mol = reac->getProductNext ();
 	while (mol != NULL)
 	{
+	  os << " + ";
+	  n = reac->getProdStoich (mol);
+	  if (n > 1)
+	  {
+	    os << n << " ";
+	  }
 	  mol->getSequence (&s);
-	  os << " + " << s;
+	  os << s;
 	  mol = reac->getProductNext ();
 	}
       }
