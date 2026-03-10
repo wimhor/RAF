@@ -10,7 +10,6 @@
 #include <fstream>
 #include <vector>
 #include "Reaction.h"
-//#include "def.h"
 
 using namespace std;
 

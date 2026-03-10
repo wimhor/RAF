@@ -7,7 +7,6 @@
 #ifndef _REACTION_H_
 #define _REACTION_H_
 
-//#include "def.h"
 #include "Molecule.h"
 #include <algorithm>
 #include <list>

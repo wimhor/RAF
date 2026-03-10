@@ -6,7 +6,6 @@
 
 #include <string.h>
 #include <iostream>
-//#include "def.h"
 #include "ReacSet.h"
 
 using namespace std;
@@ -25,6 +24,7 @@ ReacSet::ReacSet ()
   itReaction = reactions.begin ();
   itFoodSet = foodSet.begin ();
   maxRAF = NULL;
+  CAF = NULL;
 }
 
 
