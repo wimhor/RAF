@@ -1,17 +1,27 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 9 March 2026
+** Wim Hordijk   Last modified: 10 March 2026
 */
 
 #ifndef _REACTION_H_
 #define _REACTION_H_
 
-#include "def.h"
+//#include "def.h"
 #include "Molecule.h"
 #include <algorithm>
 #include <list>
 #include <map>
+
+
+/*
+** Defines:
+**   - UNI_DIR: Uni-directional reaction.
+**   - BI_DIR:  Bi-directional reaction.
+*/
+
+#define UNI_DIR 0
+#define BI_DIR  1
 
 
 /*

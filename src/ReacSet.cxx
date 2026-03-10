@@ -1,12 +1,12 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 9 March 2026
+** Wim Hordijk   Last modified: 10 March 2026
 */
 
 #include <string.h>
 #include <iostream>
-#include "def.h"
+//#include "def.h"
 #include "ReacSet.h"
 
 using namespace std;
@@ -1232,15 +1232,24 @@ void ReacSet::writeToFile (ofstream& os)
   {
     reac = *itReaction;
     reac->getID (&s);
-    if (s.find (CMP_PREFIX) == string::npos)
+    os << s << "\t";
+    /*
+    ** Reactants.
+    */
+    mol = reac->getReactantFirst ();
+    if (mol != NULL)
     {
-      os << s << "\t";
-      /*
-      ** Reactants.
-      */
-      mol = reac->getReactantFirst ();
-      if (mol != NULL)
+      n = reac->getReacStoich (mol);
+      if (n > 1)
       {
+	os << n << " ";
+      }
+      mol->getSequence (&s);
+      os << s << " ";
+      mol = reac->getReactantNext ();
+      while (mol != NULL)
+      {
+	os << "+ ";
 	n = reac->getReacStoich (mol);
 	if (n > 1)
 	{
@@ -1249,36 +1258,36 @@ void ReacSet::writeToFile (ofstream& os)
 	mol->getSequence (&s);
 	os << s << " ";
 	mol = reac->getReactantNext ();
-	while (mol != NULL)
-	{
-	  os << "+ ";
-	  n = reac->getReacStoich (mol);
-	  if (n > 1)
-	  {
-	    os << n << " ";
-	  }
-	  mol->getSequence (&s);
-	  os << s << " ";
-	  mol = reac->getReactantNext ();
-	}
       }
-      /*
-      ** Reaction arrow.
-      */
-      if (reac->getDirection () == UNI_DIR)
+    }
+    /*
+    ** Reaction arrow.
+    */
+    if (reac->getDirection () == UNI_DIR)
+    {
+      os << "=> ";
+    }
+    else
+    {
+      os << "<=> ";
+    }
+    /*
+    ** Products.
+    */
+    mol = reac->getProductFirst ();
+    if (mol != NULL)
+    {
+      n = reac->getProdStoich (mol);
+      if (n > 1)
       {
-	os << "=> ";
+	os << n << " ";
       }
-      else
+      mol->getSequence (&s);
+      os << s;
+      mol = reac->getProductNext ();
+      while (mol != NULL)
       {
-	os << "<=> ";
-      }
-      /*
-      ** Products.
-      */
-      mol = reac->getProductFirst ();
-      if (mol != NULL)
-      {
+	os << " + ";
 	n = reac->getProdStoich (mol);
 	if (n > 1)
 	{
@@ -1287,46 +1296,34 @@ void ReacSet::writeToFile (ofstream& os)
 	mol->getSequence (&s);
 	os << s;
 	mol = reac->getProductNext ();
-	while (mol != NULL)
-	{
-	  os << " + ";
-	  n = reac->getProdStoich (mol);
-	  if (n > 1)
-	  {
-	    os << n << " ";
-	  }
-	  mol->getSequence (&s);
-	  os << s;
-	  mol = reac->getProductNext ();
-	}
       }
-      os << "\t";
-      /*
-      ** Catalysts.
-      */
-      mol = reac->getCatalystFirst ();
-      if (mol != NULL)
+    }
+    os << "\t";
+    /*
+    ** Catalysts.
+    */
+    mol = reac->getCatalystFirst ();
+    if (mol != NULL)
+    {
+      mol->getSequence (&s);
+      os << s;
+      mol = reac->getCatalystNext ();
+      while (mol != NULL)
       {
 	mol->getSequence (&s);
-	os << s;
+	os << " " << s;
 	mol = reac->getCatalystNext ();
-	while (mol != NULL)
-	{
-	  mol->getSequence (&s);
-	  os << " " << s;
-	  mol = reac->getCatalystNext ();
-	}
       }
-      if (reac->getNrCatalysts () == 0)
-      {
-	os << " ";
-      }
-      os << "\t";
-      /*
-      ** Reaction rate.
-      */
-      os << "1" << endl;
     }
+    if (reac->getNrCatalysts () == 0)
+    {
+      os << " ";
+    }
+    os << "\t";
+    /*
+    ** Reaction rate.
+    */
+    os << "1" << endl;
     itReaction++;
   }
 }

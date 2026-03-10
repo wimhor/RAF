@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 9 March 2026
+** Wim Hordijk   Last modified: 10 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -10,7 +10,7 @@
 #include <fstream>
 #include <vector>
 #include "Reaction.h"
-#include "def.h"
+//#include "def.h"
 
 using namespace std;
 

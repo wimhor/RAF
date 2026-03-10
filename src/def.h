@@ -10,14 +10,12 @@
 
 /*
 ** Defines:
-**   - UNI_DIR:    Uni-directional.
-**   - BI_DIR:     Bi-directional.
-**   - CMP_PREFIX: The prefix to use in the ID of compound reactions and molecules.
+**   - UNI_DIR: Uni-directional reaction.
+**   - BI_DIR:  Bi-directional reaction.
 */
 
-#define UNI_DIR    0
-#define BI_DIR     1
-#define CMP_PREFIX "__CMP__"
+#define UNI_DIR 0
+#define BI_DIR  1
 
 
 #endif  /* _DEF_H_ */
