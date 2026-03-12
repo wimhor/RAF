@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 9 March 2026
+** Wim Hordijk   Last modified: 12 March 2026
 */
 
 #include "Reaction.h"
@@ -39,32 +39,9 @@ Reaction::~Reaction ()
   ** Remove this reaction from its reactants, products, and catalyst, and
   ** clear all lists.
   */
-  itReactant = reactants.begin ();
-  while (itReactant != reactants.end ())
-  {
-    mol = *itReactant;
-    mol->removeAsReactant (this);
-    itReactant++;
-  }
-  reactants.clear ();
-  itProduct = products.begin ();
-  while (itProduct != products.end ())
-  {
-    mol = *itProduct;
-    mol->removeAsProduct (this);
-    itProduct++;
-  }
-  products.clear ();
-  itCatalyst = catalysts.begin ();
-  while (itCatalyst != catalysts.end ())
-  {
-    mol = *itCatalyst;
-    mol->removeAsCatalyst (this);
-    itCatalyst++;
-  }
-  catalysts.clear ();
-  reacStoich.clear ();
-  prodStoich.clear ();
+  clearReactants ();
+  clearProducts ();
+  clearCatalysts ();
 }
 
 
@@ -232,7 +209,7 @@ int Reaction::getReacStoich (Molecule *mol)
 
 
 /*
-** addReactant: Add a reactant to the list.
+** addReactant: Add a reactant to the list of reactants.
 **
 ** Parameters:
 **   - mol: The molecule to add.
@@ -242,11 +219,15 @@ int Reaction::getReacStoich (Molecule *mol)
 void Reaction::addReactant (Molecule *mol, int n)
 {
   /*
-  ** Add the reactant to the list.
+  ** Add the reactant to the list if it's not already there.
   */
-  reactants.push_back (mol);
-  mol->addAsReactant (this);
-  reacStoich[mol] = n;
+  itReactant = find (reactants.begin (), reactants.end (), mol);
+  if (itReactant == reactants.end ())
+  {
+    reactants.push_back (mol);
+    mol->addAsReactant (this);
+    reacStoich[mol] = n;
+  }
 }
 
 
@@ -277,7 +258,7 @@ void Reaction::clearReactants ()
   Molecule *mol;
 
   /*
-  ** Clear the reactants list.
+  ** Remove this reaction from all its reactants and clear the list.
   */
   itReactant = reactants.begin ();
   while (itReactant != reactants.end ())
@@ -450,11 +431,15 @@ int Reaction::getProdStoich (Molecule *mol)
 void Reaction::addProduct (Molecule *mol, int n)
 {
   /*
-  ** Add the product to the list.
+  ** Add the product to the list if it's not already there.
   */
-  products.push_back (mol);
-  mol->addAsProduct (this);
-  prodStoich[mol] = n;
+  itProduct = find (products.begin (), products.end (), mol);
+  if (itProduct == products.end ())
+  {
+    products.push_back (mol);
+    mol->addAsProduct (this);
+    prodStoich[mol] = n;
+  }
 }
 
 
@@ -485,7 +470,7 @@ void Reaction::clearProducts ()
   Molecule *mol;
 
   /*
-  ** Clear the products list.
+  ** Remove this reaction from its products and clear the list.
   */
   itProduct = products.begin ();
   while (itProduct != products.end ())
@@ -622,10 +607,14 @@ bool Reaction::hasCatalyst (Molecule *mol)
 void Reaction::addCatalyst (Molecule *mol)
 {
   /*
-  ** Add the catalyst to the list.
+  ** Add the catalyst to the list if it's not already there.
   */
-  catalysts.push_back (mol);
-  mol->addAsCatalyst (this);
+  itCatalyst = find (catalysts.begin (), catalysts.end (), mol);
+  if (itCatalyst == catalysts.end ())
+  {
+    catalysts.push_back (mol);
+    mol->addAsCatalyst (this);
+  }
 }
 
 
@@ -655,7 +644,7 @@ void Reaction::clearCatalysts ()
   Molecule *mol;
 
   /*
-  ** Clear the catalysts list.
+  ** Remove this reaction from its catalysts and clear the list.
   */
   itCatalyst = catalysts.begin ();
   while (itCatalyst != catalysts.end ())

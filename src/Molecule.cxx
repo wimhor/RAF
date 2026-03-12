@@ -1,7 +1,7 @@
 /*
 ** Molecule.cxx: Molecule class.
 **
-** Wim Hordijk   Last modified: 5 March 2026
+** Wim Hordijk   Last modified: 12 March 2026
 */
 
 #include "Molecule.h"
@@ -26,9 +26,9 @@ Molecule::Molecule (string seq)
   /*
   ** Set variables.
   */
-  itReactant = asReactant.begin ();
-  itProduct = asProduct.begin ();
-  itCatalyst = asCatalyst.begin ();
+  itAsReactant = asReactant.begin ();
+  itAsProduct = asProduct.begin ();
+  itAsCatalyst = asCatalyst.begin ();
 }
 
 
@@ -89,9 +89,13 @@ int Molecule::getSeqLength ()
 void Molecule::addAsReactant (Reaction *reac)
 {
   /*
-  ** Add the reaction to the list.
+  ** Add the reaction to the list if it's not already in there.
   */
-  asReactant.insert (reac);
+  itAsReactant = find (asReactant.begin (), asReactant.end (), reac);
+  if (itAsReactant == asReactant.end ())
+  {
+    asReactant.push_back (reac);
+  }
 }
 
 
@@ -107,7 +111,7 @@ void Molecule::removeAsReactant (Reaction *reac)
   /*
   ** Remove the reaction from the list.
   */
-  asReactant.erase (reac);
+  asReactant.remove (reac);
 }
 
 
@@ -121,9 +125,13 @@ void Molecule::removeAsReactant (Reaction *reac)
 void Molecule::addAsProduct (Reaction *reac)
 {
   /*
-  ** Add the reaction to the list.
+  ** Add the reaction to the list if it's not already in there.
   */
-  asProduct.insert (reac);
+  itAsProduct = find (asProduct.begin (), asProduct.end (), reac);
+  if (itAsProduct == asProduct.end ())
+  {
+    asProduct.push_back (reac);
+  }
 }
 
 
@@ -139,7 +147,7 @@ void Molecule::removeAsProduct (Reaction *reac)
   /*
   ** Remove the reaction from the list.
   */
-  asProduct.erase (reac);
+  asProduct.remove (reac);
 }
 
 
@@ -153,9 +161,13 @@ void Molecule::removeAsProduct (Reaction *reac)
 void Molecule::addAsCatalyst (Reaction *reac)
 {
   /*
-  ** Add the reaction to the list.
+  ** Add the reaction to the list if it's not already in there.
   */
-  asCatalyst.insert (reac);
+  itAsCatalyst = find (asCatalyst.begin (), asCatalyst.end (), reac);
+  if (itAsCatalyst == asCatalyst.end ())
+  {
+    asCatalyst.push_back (reac);
+  }
 }
 
 
@@ -171,7 +183,7 @@ void Molecule::removeAsCatalyst (Reaction *reac)
   /*
   ** Remove the reaction from the list.
   */
-  asCatalyst.erase (reac);
+  asCatalyst.remove (reac);
 }
 
 
@@ -241,10 +253,10 @@ Reaction *Molecule::getAsReactantFirst ()
   /*
   ** Get the first reaction.
   */
-  itReactant = asReactant.begin ();
-  if (itReactant != asReactant.end ())
+  itAsReactant = asReactant.begin ();
+  if (itAsReactant != asReactant.end ())
   {
-    reac = *itReactant;
+    reac = *itAsReactant;
   }
   else
   {
@@ -273,10 +285,10 @@ Reaction *Molecule::getAsReactantNext ()
   /*
   ** Get the next reaction.
   */
-  itReactant++;
-  if (itReactant != asReactant.end ())
+  itAsReactant++;
+  if (itAsReactant != asReactant.end ())
   {
-    reac = *itReactant;
+    reac = *itAsReactant;
   }
   else
   {
@@ -305,10 +317,10 @@ Reaction *Molecule::getAsProductFirst ()
   /*
   ** Get the first reaction.
   */
-  itProduct = asProduct.begin ();
-  if (itProduct != asProduct.end ())
+  itAsProduct = asProduct.begin ();
+  if (itAsProduct != asProduct.end ())
   {
-    reac = *itProduct;
+    reac = *itAsProduct;
   }
   else
   {
@@ -337,10 +349,10 @@ Reaction *Molecule::getAsProductNext ()
   /*
   ** Get the next reaction.
   */
-  itProduct++;
-  if (itProduct != asProduct.end ())
+  itAsProduct++;
+  if (itAsProduct != asProduct.end ())
   {
-    reac = *itProduct;
+    reac = *itAsProduct;
   }
   else
   {
@@ -369,10 +381,10 @@ Reaction *Molecule::getAsCatalystFirst ()
   /*
   ** Get the first reaction.
   */
-  itCatalyst = asCatalyst.begin ();
-  if (itCatalyst != asCatalyst.end ())
+  itAsCatalyst = asCatalyst.begin ();
+  if (itAsCatalyst != asCatalyst.end ())
   {
-    reac = *itCatalyst;
+    reac = *itAsCatalyst;
   }
   else
   {
@@ -401,10 +413,10 @@ Reaction *Molecule::getAsCatalystNext ()
   /*
   ** Get the next reaction.
   */
-  itCatalyst++;
-  if (itCatalyst != asCatalyst.end ())
+  itAsCatalyst++;
+  if (itAsCatalyst != asCatalyst.end ())
   {
-    reac = *itCatalyst;
+    reac = *itAsCatalyst;
   }
   else
   {

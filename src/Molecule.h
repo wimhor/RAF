@@ -1,13 +1,13 @@
 /*
 ** Molecule.h: Definition of a molecule type.
 **
-** Wim Hordijk   Last modified: 5 March 2026
+** Wim Hordijk   Last modified: 12 March 2026
 */
 
 #ifndef _MOLECULE_H_
 #define _MOLECULE_H_
 
-#include <set>
+#include <list>
 #include <string>
 
 using namespace std;
@@ -25,7 +25,7 @@ class Molecule
   /*
   ** Constructors and destructors.
   */
-  Molecule  (string seq);
+   Molecule  (string seq);
   ~Molecule ();
 
   /*
@@ -53,10 +53,10 @@ class Molecule
   /*
   ** Private member variables.
   */
-  int                      seqLength;
-  string                   sequence;
-  set<Reaction*>           asReactant, asProduct, asCatalyst;
-  set<Reaction*>::iterator itReactant, itProduct, itCatalyst;
+  int                       seqLength;
+  string                    sequence;
+  list<Reaction*>           asReactant, asProduct, asCatalyst;
+  list<Reaction*>::iterator itAsReactant, itAsProduct, itAsCatalyst;
 };
 
 

@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 10 March 2026
+** Wim Hordijk   Last modified: 12 March 2026
 */
 
 #include <string.h>
@@ -23,6 +23,7 @@ ReacSet::ReacSet ()
   itMolecule = molecules.begin ();
   itReaction = reactions.begin ();
   itFoodSet = foodSet.begin ();
+  itClosure = closure.begin ();
   maxRAF = NULL;
   CAF = NULL;
 }
@@ -147,7 +148,6 @@ Molecule *ReacSet::getMoleculeNext ()
 
 Molecule *ReacSet::getMoleculeBySeq (string seq)
 {
-  string                           s;
   Molecule                        *mol;
   map<string,Molecule*>::iterator  it;
 
@@ -357,9 +357,13 @@ bool ReacSet::isInFoodSet (Molecule *mol)
 void ReacSet::addToFoodSet (Molecule *mol)
 {
   /*
-  ** Add the molecule to the food set.
+  ** Add the molecule to the food set if it's not already there.
   */
-  foodSet.push_back (mol);
+  itFoodSet = find (foodSet.begin (), foodSet.end (), mol);
+  if (itFoodSet == foodSet.end ())
+  {
+    foodSet.push_back (mol);
+  }
 }
 
 
@@ -517,9 +521,13 @@ bool ReacSet::isInReacSet (Reaction *reac)
 void ReacSet::addReaction (Reaction *reac)
 {
   /*
-  ** Add the reaction to the list.
+  ** Add the reaction to the list if it's not already there.
   */
-  reactions.push_back (reac);
+  itReaction = find (reactions.begin (), reactions.end (), reac);
+  if (itReaction == reactions.end ())
+  {
+    reactions.push_back (reac);
+  }
 }
 
 
@@ -535,7 +543,6 @@ void ReacSet::removeReaction (Reaction *reac)
   /*
   ** Remove the reaction from the list.
   */
-
   reactions.remove (reac);
 }
 
@@ -653,9 +660,7 @@ int ReacSet::applyRAFalgo ()
 
 int ReacSet::findMaxRAF ()
 {
-  int       size;
-  string    id;
-  Reaction *reac;
+  int size;
 
   /*
   ** Create a new reaction set to contain the maxRAF and copy the current
@@ -810,8 +815,6 @@ void ReacSet::computeClosureF ()
   Reaction                  *reac;
   bool                       apply;
   string                     seq;
-  list<Molecule*>::iterator  itMolecule;
-  list<Reaction*>::iterator  itReac;
 
   /*
   ** Clear the closure and copy all food molecules to it.

@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 10 March 2026
+** Wim Hordijk   Last modified: 12 March 2026
 */
 
 #ifndef _REACTION_H_
@@ -9,7 +9,6 @@
 
 #include "Molecule.h"
 #include <algorithm>
-#include <list>
 #include <map>
 
 
@@ -33,7 +32,7 @@ class Reaction
   /*
   ** Constructors and destructors.
   */
-  Reaction  (string id);
+   Reaction  (string id);
   ~Reaction ();
 
   /*
