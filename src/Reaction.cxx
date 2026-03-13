@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 12 March 2026
+** Wim Hordijk   Last modified: 13 March 2026
 */
 
 #include "Reaction.h"
@@ -209,7 +209,8 @@ int Reaction::getReacStoich (Molecule *mol)
 
 
 /*
-** addReactant: Add a reactant to the list of reactants.
+** addReactant: Add a reactant to the list of reactants. If the reactant already
+**              exists, increase its stoichiometry.
 **
 ** Parameters:
 **   - mol: The molecule to add.
@@ -219,7 +220,8 @@ int Reaction::getReacStoich (Molecule *mol)
 void Reaction::addReactant (Molecule *mol, int n)
 {
   /*
-  ** Add the reactant to the list if it's not already there.
+  ** If the reactant does not exist yet, add it to the list. Otherwise, increase
+  ** its stoichiometry.
   */
   itReactant = find (reactants.begin (), reactants.end (), mol);
   if (itReactant == reactants.end ())
@@ -227,6 +229,10 @@ void Reaction::addReactant (Molecule *mol, int n)
     reactants.push_back (mol);
     mol->addAsReactant (this);
     reacStoich[mol] = n;
+  }
+  else
+  {
+    reacStoich[mol] += n;
   }
 }
 
@@ -421,7 +427,8 @@ int Reaction::getProdStoich (Molecule *mol)
 
 
 /*
-** addProduct: Add a product to the list.
+** addProduct: Add a product to the list. If the product already exists, increase
+**             its stoichiometry.
 **
 ** Parameters:
 **   - mol: The molecule to add.
@@ -431,7 +438,8 @@ int Reaction::getProdStoich (Molecule *mol)
 void Reaction::addProduct (Molecule *mol, int n)
 {
   /*
-  ** Add the product to the list if it's not already there.
+  ** If the product does not yet exist, add it to the list. Otherwise, increase
+  ** its stoichiometry.
   */
   itProduct = find (products.begin (), products.end (), mol);
   if (itProduct == products.end ())
@@ -439,6 +447,10 @@ void Reaction::addProduct (Molecule *mol, int n)
     products.push_back (mol);
     mol->addAsProduct (this);
     prodStoich[mol] = n;
+  }
+  else
+  {
+    prodStoich[mol] += n;
   }
 }
 
@@ -598,7 +610,7 @@ bool Reaction::hasCatalyst (Molecule *mol)
 
 
 /*
-** addCatalyst: Add a catalyst to the list.
+** addCatalyst: Add a catalyst to the list if it does not already exist.
 **
 ** Parameters:
 **   - mol: The molecule to add.

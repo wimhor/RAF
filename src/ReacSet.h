@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 10 March 2026
+** Wim Hordijk   Last modified: 13 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -63,7 +63,8 @@ class ReacSet
   void      printReaction      (Reaction *reac);
   void      printMaxRAF        (bool full);
   void      printCAF           (bool full);
-
+  void      copy               (ReacSet *orig);
+  
  private:
   /*
   ** Private member variables.

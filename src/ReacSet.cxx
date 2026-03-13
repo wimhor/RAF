@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 12 March 2026
+** Wim Hordijk   Last modified: 13 March 2026
 */
 
 #include <string.h>
@@ -348,7 +348,7 @@ bool ReacSet::isInFoodSet (Molecule *mol)
 
 
 /*
-** addToFoodSet: Add a molecule to the food set.
+** addToFoodSet: Add a molecule to the food set if it does not already exist.
 **
 ** Parameters:
 **   - mol: The molecule to add.
@@ -512,7 +512,7 @@ bool ReacSet::isInReacSet (Reaction *reac)
 
 
 /*
-** addReaction: Add a reaction to the list.
+** addReaction: Add a reaction to the list if it does not alreayd exist.
 **
 ** Parameters:
 **   - reac: The reaction to add.
@@ -667,7 +667,7 @@ int ReacSet::findMaxRAF ()
   ** reaction set's content to it.
   */
   maxRAF = new ReacSet ();
-  maxRAF = this;
+  maxRAF->copy (this);
   
   /*
   ** Apply the RAF algorithm on the new set.
@@ -839,40 +839,43 @@ void ReacSet::computeClosureF ()
     */
     mol = *itClosure;
     /*
-    ** Check all current reactions for which the current molecule is a reactant
-    ** and see if they can be applied.
+    ** Check all reactions for which the current molecule is a reactant and
+    ** which are still in the reactino set and see if they can be applied.
     */
     reac = mol->getAsReactantFirst ();
-    while (reac != NULL && isInReacSet (reac))
+    while (reac != NULL)
     {
-      /*
-      ** Check all reactants.
-      */
-      apply = true;
-      r = reac->getReactantFirst ();
-      while (r != NULL)
+      if (isInReacSet (reac))
       {
-	if (!isInClosureF (r))
+	/*
+	** Check all reactants.
+	*/
+	apply = true;
+	r = reac->getReactantFirst ();
+	while (r != NULL)
 	{
-	  apply = false;
-	  break;
-	}
-	r = reac->getReactantNext ();
-      }
-      /*
-      ** If the reaction can be applied, add all products to the closure if
-      ** they are not already in there.
-      */
-      if (apply)
-      {
-	p = reac->getProductFirst ();
-	while (p != NULL)
-	{
-	  if (!isInClosureF (p))
+	  if (!isInClosureF (r))
 	  {
-	    closure.push_back (p);
+	    apply = false;
+	    break;
 	  }
-	  p = reac->getProductNext ();
+	  r = reac->getReactantNext ();
+	}
+	/*
+	** If the reaction can be applied, add all products to the closure if
+	** they are not already in there.
+	*/
+	if (apply)
+	{
+	  p = reac->getProductFirst ();
+	  while (p != NULL)
+	  {
+	    if (!isInClosureF (p))
+	    {
+	      closure.push_back (p);
+	    }
+	    p = reac->getProductNext ();
+	  }
 	}
       }
       /*
@@ -885,14 +888,13 @@ void ReacSet::computeClosureF ()
     ** and see if they can be applied.
     */
     reac = mol->getAsProductFirst ();
-    while (reac != NULL && isInReacSet (reac))
+    while (reac != NULL)
     {
-      /*
-      ** If the reaction is bi-directional, check all products.
-      */
-      apply = false;
-      if (reac->getDirection () == BI_DIR)
+      if (isInReacSet (reac) && (reac->getDirection () == BI_DIR))
       {
+	/*
+	** Check all products.
+	*/
 	apply = true;
 	p = reac->getProductFirst ();
 	while (p != NULL)
@@ -904,21 +906,21 @@ void ReacSet::computeClosureF ()
 	  }
 	  p = reac->getProductNext ();
 	}
-      }
-      /*
-      ** If the reaction can be applied, add all reactants to the closure if
-      ** they are not already in there.
-      */
-      if (apply)
-      {
-	r = reac->getReactantFirst ();
-	while (r != NULL)
+	/*
+	** If the reaction can be applied, add all reactants to the closure if
+	** they are not already in there.
+	*/
+	if (apply)
 	{
-	  if (!isInClosureF (r))
+	  r = reac->getReactantFirst ();
+	  while (r != NULL)
 	  {
-	    closure.push_back (r);
+	    if (!isInClosureF (r))
+	    {
+	      closure.push_back (r);
+	    }
+	    r = reac->getReactantNext ();
 	  }
-	  r = reac->getReactantNext ();
 	}
       }
       /*
@@ -1055,10 +1057,10 @@ int ReacSet::readFromFile (ifstream& is)
 	  mol = new Molecule (label);
 	  addMolecule (mol);
 	}
-	if (!reac->hasReactant (mol))
-	{
-	  reac->addReactant (mol, n);
-	}
+	/*
+	** Add the reactant. If it already existed, its stoichiometry will be updated.
+	*/
+	reac->addReactant (mol, n);
       }
       else
       {
@@ -1098,10 +1100,10 @@ int ReacSet::readFromFile (ifstream& is)
 	  mol = new Molecule (label);
 	  addMolecule (mol);
 	}
-	if (!reac->hasProduct (mol))
-	{
-	  reac->addProduct (mol, n);
-	}
+	/*
+	** Add the product. If it already existed, its stoichiometry will be updated.
+	*/
+	reac->addProduct (mol, n);
       }
       else
       {
@@ -1133,6 +1135,13 @@ int ReacSet::readFromFile (ifstream& is)
 	if (!reac->hasCatalyst (mol))
 	{
 	  reac->addCatalyst (mol);
+	}
+	else
+	{
+	  status = -1;
+	  cerr << "Catalyst " << token << " appears more than once in line "
+	       << lineNr << " of input file." << endl;
+	  goto End_of_Routine;	
 	}
 	token = strtok (NULL, " ");
       }
@@ -1460,7 +1469,7 @@ int ReacSet::findCAF ()
   ** Create a new reaction set to contain the CAF.
   */
   CAF = new ReacSet ();
-  CAF = this;
+  CAF->copy (this);
   
   /*
   ** Apply the CAF algorithm.
@@ -1685,6 +1694,28 @@ void ReacSet::printCAF (bool full)
     }
     reac = CAF->getReactionNext ();
   }
+}
+
+
+/*
+** copy: Copy the reaction network of another ReacSet object into the current one.
+**
+** Parameters:
+**   - orig: A pointer to another ReacSet object.
+*/
+
+void ReacSet::copy (ReacSet *orig)
+{
+  /*
+  ** Copy the molecule and reaction lists.
+  */
+  molecules = orig->molecules;
+  foodSet = orig->foodSet;
+  reactions = orig->reactions;
+  itMolecule = molecules.begin ();
+  itFoodSet = foodSet.begin ();
+  itReaction = reactions.begin ();
+  molMap = orig->molMap;
 }
 
 
