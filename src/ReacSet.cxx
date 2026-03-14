@@ -1351,7 +1351,7 @@ void ReacSet::printReaction (Reaction *reac)
   Molecule *mol;
 
   reac->getID (&s);
-  cout << s << "\t";
+  cout << s << ": ";
   mol = reac->getReactantFirst ();
   if (mol != NULL)
   {
@@ -1386,7 +1386,7 @@ void ReacSet::printReaction (Reaction *reac)
       mol = reac->getProductNext ();
     }
   }
-  cout << " (";
+  cout << "(";
   mol = reac->getCatalystFirst ();
   if (mol != NULL)
   {
