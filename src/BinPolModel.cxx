@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 13 March 2026
+** Wim Hordijk   Last modified: 14 March 2026
 */
 
 #include <stdlib.h>
@@ -17,7 +17,6 @@
 
 using namespace std;
 
-
 /*
 ** Defines.
 */
@@ -32,15 +31,16 @@ int  getArguments      (int argc, char **argv);
 void initBinPolModel   ();
 void uniformCatalysis  ();
 void powerlawCatalysis ();
-int  indexToString     (int index, string *s);
-int  stringToIndex     (string *s);
+int  indexToString     (int index, string& s);
+int  stringToIndex     (string& s);
+void generateFileName  (string& s, int i, int len);
 void writeToFile       (ofstream& os);
 void writeToFileOld    (ofstream& os);
 
 /*
 ** Global variables.
 */
-int        n, t, nrMolecules, nrFoodMols, nrReactions, catMethod;
+int        n, t, nrMolecules, nrFoodMols, nrReactions, catMethod, seed, nrInstances;
 float      p;
 bool       noFoodCat;
 string    *molecules, **reactions;
@@ -61,7 +61,8 @@ list<int> *catalysts;
 
 int main (int argc, char **argv)
 {
-  int      status;
+  int      status, i, l;
+  string   fName;
   ofstream ofs;
 
   status = 0;
@@ -76,29 +77,47 @@ int main (int argc, char **argv)
   }
 
   /*
-  ** Set the random seed according to the current time.
+  ** Set the random seed.
   */
-  srandom (time (NULL));
+  if (seed == 0)
+  {
+    srandom (time (NULL));
+  }
+  else
+  {
+    srandom (seed);
+  }
 
   /*
-  ** Create an instance of the binary polymer model and write it to a file.
+  ** Initialize the binary polymer model.
   */
   initBinPolModel ();
-  if (catMethod == UNIFCAT)
+  
+  /*
+  ** Generate random instances of the binary polymer model and write them to file.
+  */
+  l = (int)rint (floor (log10 (nrInstances))) + 1;
+  for (i = 1; i <= nrInstances; i++)
   {
-    uniformCatalysis ();
+    if (catMethod == UNIFCAT)
+    {
+      uniformCatalysis ();
+    }
+    else if (catMethod == PLAWCAT)
+    {
+      powerlawCatalysis ();
+    }
+    generateFileName (fName, i, l);
+    ofs.open (fName);
+    writeToFile (ofs);
+    ofs.close ();
+    /*
+    ofs.open ("bpm_old.txt");
+    writeToFileOld (ofs);
+    ofs.close ();
+    */
   }
-  else if (catMethod == PLAWCAT)
-  {
-    powerlawCatalysis ();
-  }
-  ofs.open ("bpm.txt");
-  writeToFile (ofs);
-  ofs.close ();
-  ofs.open ("bpm_old.txt");
-  writeToFileOld (ofs);
-  ofs.close ();
-
+  
  End_of_Routine:
   /*
   ** Return the status.
@@ -122,7 +141,7 @@ int main (int argc, char **argv)
 int getArguments (int argc, char **argv)
 {
   int  status, i;
-  char arg[64];
+  char arg[32];
 
   status = 0;
 
@@ -133,7 +152,9 @@ int getArguments (int argc, char **argv)
   t = 2;
   p = 0.01;
   catMethod = UNIFCAT;
+  nrInstances = 1;
   noFoodCat = false;
+  seed = 0;
   
   /*
   ** Get and check all arguments.
@@ -142,15 +163,20 @@ int getArguments (int argc, char **argv)
   {
     if (argc > 1 && strcmp (argv[1], "-help") == 0)
     {
+      status = -1;
       cout << "Usage: " << argv[0]
-	   << " n t p [-c {unif|plaw}] [-f] [-help]" << endl << endl
-	   << "  n:     The maximum polymer length (n>1)." << endl
-	   << "  t:     The maximum food polymer length (1<=t<=n)." << endl
-	   << "  p:     The catalysis probability (0.0<=p<=1.0)." << endl
-	   << "  -c C:  The catalysis assignment method: 'unif' for uniform " << endl
+	   << " n t p [-c {unif|plaw}] [-i I] [-f] [-s S] [-help]" << endl << endl
+	   << "  n:     The maximum polymer length (n > 1)." << endl
+	   << "  t:     The maximum food polymer length (1 <= t <= n)." << endl
+	   << "  p:     The catalysis probability (p >= 0.0)." << endl
+	   << "  -c C:  The catalysis assignment method C: 'unif' for uniform " << endl
 	   << "         probability (default), or 'plaw' for power law distribution."
 	   << endl
+	   << "  -i I:  The number of instances I to generate (I > 0; default = 1)."
+	   << endl
 	   << "  -f:    Do not allow food molecules to be catalysts." << endl
+	   << "  -s S:  The random seed S (S >= 0; default = 0: use current time)."
+	   << endl
 	   << "  -help: Print this help message and exit." << endl;
       goto End_of_Routine;
     }
@@ -174,10 +200,10 @@ int getArguments (int argc, char **argv)
     cerr << "Invalid value for t: " << argv[2] << " (should be 1<=t<=n)." << endl;
     goto End_of_Routine;
   }
-  if ((sscanf (argv[3], "%f", &p) != 1) || (p < 0.0) || (p > 1.0))
+  if ((sscanf (argv[3], "%f", &p) != 1) || (p < 0.0))
   {
     status = -1;
-    cerr << "Invalid value for p: " << argv[3] << " (should be 0.0<=p<=1.0)." << endl;
+    cerr << "Invalid value for p: " << argv[3] << " (should be p >= 0.0)." << endl;
     goto End_of_Routine;
   }
   i = 4;
@@ -203,9 +229,29 @@ int getArguments (int argc, char **argv)
       }
       i++;
     }
+    else if (strcmp (argv[i], "-i") == 0)
+    {
+      if ((sscanf (argv[++i], "%d", &nrInstances) != 1) || (nrInstances < 1))
+      {
+	status = -1;
+	cerr << "Invalid value for I: " << argv[i] << " (should be I > 0)." << endl;
+	goto End_of_Routine;
+      }
+      i++;
+    }
     else if (strcmp (argv[i], "-f") == 0)
     {
       noFoodCat = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-s") == 0)
+    {
+      if ((sscanf (argv[++i], "%d", &seed) != 1) || (seed < 0))
+      {
+	status = -1;
+	cerr << "Invalid value for S: " << argv[i] << " (should be S >= 0)." << endl;
+	goto End_of_Routine;
+      }
       i++;
     }
     else
@@ -262,7 +308,7 @@ void initBinPolModel ()
   for (i = 0; i < nrMolecules; i++)
   {
     seq.clear ();
-    l = indexToString (i, &seq);
+    l = indexToString (i, seq);
     (molecules[i]).assign (seq);
   }
 
@@ -284,7 +330,7 @@ void initBinPolModel ()
 	/*
 	** Add the reaction.
 	*/
-	l = stringToIndex (&seq);
+	l = stringToIndex (seq);
 	(reactions[iter][0]).assign (molecules[i]);
 	(reactions[iter][1]).assign (molecules[j]);
 	(reactions[iter][2]).assign (molecules[l]);
@@ -302,6 +348,14 @@ void initBinPolModel ()
 void uniformCatalysis ()
 {
   int i, j, start;
+
+  /*
+  ** Clear the current catalysts.
+  */
+  for (i = 0; i < nrReactions; i++)
+  {
+    (catalysts[i]).clear ();
+  }
 
   /*
   ** Consider each possible (molecule, reaction) pair and assign the given molecule
@@ -338,8 +392,16 @@ void uniformCatalysis ()
 
 void powerlawCatalysis ()
 {
-  int                 i, j, nrReacs, rnd, start;
+  int                 i, j, nrCat, rnd, start;
   list<int>::iterator itCat;
+
+  /*
+  ** Clear the current catalysts.
+  */
+  for (i = 0; i < nrReactions; i++)
+  {
+    (catalysts[i]).clear ();
+  }
 
   /*
   ** For each molecule, draw a random number from the Zipf distribution and
@@ -358,17 +420,17 @@ void powerlawCatalysis ()
     /*
     ** Get the number of reactions the current molecule will catalyze.
     */
-    nrReacs = zipf (p, nrReactions) - 1;
-    if (nrReacs > nrReactions)
+    nrCat = zipf (p, nrReactions) - 1;
+    if (nrCat > nrReactions)
     {
-      nrReacs = nrReactions;
+      nrCat = nrReactions;
     }
     /*
     ** Draw 'nrReacs' random reactions to be catalyzed. Since most molecules will
     ** catalyze only a small number of reactions (or even none), this is just done
     ** with replacement to keep it simple.
     */
-    for (j = 0; j < nrReacs; j++)
+    for (j = 0; j < nrCat; j++)
     {
       rnd = random () % (nrReactions);
       itCat = find ((catalysts[rnd]).begin (), (catalysts[rnd]).end (), i);
@@ -392,7 +454,7 @@ void powerlawCatalysis ()
 **   The length of the converted string.
 */
 
-int indexToString (int index, string *s)
+int indexToString (int index, string& s)
 {
   int len, dec, l;
 
@@ -402,7 +464,7 @@ int indexToString (int index, string *s)
   if (index < 0)
   {
     len = 0;
-    s->assign ("");
+    s.assign ("");
     goto End_of_Routine;
   }
   
@@ -415,11 +477,11 @@ int indexToString (int index, string *s)
   {
     if (dec % 2 == 1)
     {
-      s->insert (0, "1");
+      s.insert (0, "1");
     }
     else
     {
-      s->insert (0, "0");
+      s.insert (0, "0");
     }
     dec /= 2;
   }
@@ -442,7 +504,7 @@ int indexToString (int index, string *s)
 **   The index of s (-1 if s is not a valid bit string).
 */
 
-int stringToIndex (string *s)
+int stringToIndex (string& s)
 {
   int  len, index, dec, inc, l;
   char c;
@@ -450,7 +512,7 @@ int stringToIndex (string *s)
   /*
   ** Check the string.
   */
-  len = s->length ();
+  len = s.length ();
   if (len == 0)
   {
     index = -1;
@@ -464,7 +526,7 @@ int stringToIndex (string *s)
   inc = 1;
   for (l = len-1; l >= 0; l--)
   {
-    c = s->at (l);
+    c = s.at (l);
     if (c == '1')
     {
       dec += inc;
@@ -483,6 +545,30 @@ int stringToIndex (string *s)
   ** Return the index.
   */
   return (index);
+}
+
+
+/*
+** generateFileName: Generate a file name with enough leading zeros.
+**
+** Parameters:
+**   - s:   A string to put the result in.
+**   - i:   The current file number.
+**   - len: The required length for the number (i.e., including leading zeros).
+*/
+
+void generateFileName (string& s, int i, int len)
+{
+  int d, k;
+
+  s.assign ("bpm");
+  d = (int)rint (floor (log10 (i))) + 1;
+  for (k = d; k < len; k++)
+  {
+    s.append ("0");
+  }
+  s.append (to_string (i));
+  s.append (".crs");
 }
 
 
