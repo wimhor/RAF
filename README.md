@@ -8,4 +8,4 @@ Note: This repo is still under development. Information about how to compile and
 
 This repo was made possible in part by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic).
 
-![](../wimhor/images/MATOMIC.png)
+![](/../wimhor/images/MATOMIC.png)
