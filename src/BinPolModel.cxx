@@ -81,11 +81,12 @@ int main (int argc, char **argv)
   */
   if (seed == 0)
   {
-    srandom (time (NULL));
+    seed = time (NULL);
   }
-  else
+  srandom (seed);
+  if (catMethod == PLAWCAT)
   {
-    srandom (seed);
+    rand_val (seed);
   }
 
   /*
@@ -402,7 +403,7 @@ void powerlawCatalysis ()
   {
     (catalysts[i]).clear ();
   }
-
+  
   /*
   ** For each molecule, draw a random number from the Zipf distribution and
   ** assign it as a catalyst to that many random reactions.

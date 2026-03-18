@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 13 March 2026
+** Wim Hordijk   Last modified: 18 March 2026
 */
 
 #include <string.h>
@@ -512,6 +512,59 @@ bool ReacSet::isInReacSet (Reaction *reac)
 
 
 /*
+** compare: Compare the current reaction set with another one.
+**
+** Note: This comparison is based purely on pointers to reactions, so can only be
+**       applied to subsets of the same original reaction set. Different instantiations
+**       of the same reaction set will have different pointers to the same reactions!
+**
+** Parameters:
+**   - rset: The reaction set to compare with.
+**
+** Returns:
+**   - If the two sets are the same: true.
+**   - Otherwise:                    false.
+*/
+
+bool ReacSet::compare (ReacSet *rset)
+{
+  bool      same;
+  Reaction *reac;
+
+  /*
+  ** First compare their sizes.
+  */
+  same = true;
+  if (reactions.size () != rset->getNrReactions ())
+  {
+    same = false;
+  }
+
+  /*
+  ** While still necessary, compare all reaction pointers until a difference is found.
+  */
+  itReaction = reactions.begin ();
+  while (same && (itReaction != reactions.end ()))
+  {
+    reac = *itReaction;
+    if (rset->isInReacSet (reac))
+    {
+      itReaction++;
+    }
+    else
+    {
+      same = false;
+    }
+  }
+
+  /*
+  ** Return the result.
+  */
+  return (same);
+}
+
+
+/*
 ** addReaction: Add a reaction to the list if it does not alreayd exist.
 **
 ** Parameters:
@@ -644,6 +697,23 @@ int ReacSet::applyRAFalgo ()
     }
   }
 
+  /*
+  ** Remove all molecules that are not in the current closure of the food set.
+  */
+  itMolecule = molecules.begin ();
+  while (itMolecule != molecules.end ())
+  {
+    mol = *itMolecule;
+    if (isInClosureF (mol))
+    {
+      itMolecule++;
+    }
+    else
+    {
+      itMolecule = molecules.erase (itMolecule);
+    }
+  }
+  
   /*
   ** Return the size of the resulting reaction set.
   */
@@ -1434,9 +1504,13 @@ void ReacSet::printMaxRAF (bool full)
     else
     {
       reac->getID (&s);
-      cout << s << endl;
+      cout << s << " ";
     }
     reac = maxRAF->getReactionNext ();
+  }
+  if (!full)
+  {
+    cout << endl;
   }
 }
 
@@ -1658,6 +1732,24 @@ int ReacSet::applyCAFalgo ()
   }
 
   /*
+  ** Remove all molecules that are not in the current closure.
+  */
+  itMolecule = molecules.begin ();
+  while (itMolecule != molecules.end ())
+  {
+    mol = *itMolecule;
+    if (isInClosureF (mol))
+    {
+      itMolecule++;
+    }
+    else
+    {
+      itMolecule = molecules.erase (itMolecule);
+    }
+  }
+  
+  /*
+  /*
   ** Return the size of the CAF.
   */
   return (reactions.size ());
@@ -1690,9 +1782,13 @@ void ReacSet::printCAF (bool full)
     else
     {
       reac->getID (&s);
-      cout << s << endl;
+      cout << s << " ";
     }
     reac = CAF->getReactionNext ();
+  }
+  if (!full)
+  {
+    cout << endl;
   }
 }
 
