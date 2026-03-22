@@ -629,10 +629,30 @@ int ReacSet::applyRAFalgo ()
   Reaction *reac;
 
   /*
+  ** First remove all reactions that have no catalysts.
+  */
+  itReaction = reactions.begin ();
+  while (itReaction != reactions.end ())
+  {
+    reac = *itReaction;
+    reac->applied = false;
+    if (reac->getNrCatalysts () == 0)
+    {
+      reac->inSet = false;
+      itReaction = reactions.erase (itReaction);
+    }
+    else
+    {
+      reac->inSet = true;
+      itReaction++;
+    }
+  }
+  reactionsRemoved = true;
+  
+  /*
   ** While reactions could be removed and the current reaction set is not empty,
   ** iterate the RAF algorithm.
   */
-  reactionsRemoved = true;
   while (reactionsRemoved && reactions.size () > 0)
   {
     /*
@@ -658,7 +678,7 @@ int ReacSet::applyRAFalgo ()
       mol = reac->getReactantFirst ();
       while (mol != NULL)
       {
-	if (!isInClosureF (mol))
+	if (!mol->inClosure)
 	{
 	  remove = true;
 	  break;
@@ -674,7 +694,7 @@ int ReacSet::applyRAFalgo ()
 	mol = reac->getCatalystFirst ();
 	while (mol != NULL)
 	{
-	  if (isInClosureF (mol))
+	  if (mol->inClosure)
 	  {
 	    remove = false;
 	    break;
@@ -687,6 +707,8 @@ int ReacSet::applyRAFalgo ()
       */
       if (remove)
       {
+	reac->inSet = false;
+	reac->applied = false;
 	itReaction = reactions.erase (itReaction);
 	reactionsRemoved = true;
       }
@@ -704,7 +726,7 @@ int ReacSet::applyRAFalgo ()
   while (itMolecule != molecules.end ())
   {
     mol = *itMolecule;
-    if (isInClosureF (mol))
+    if (mol->inClosure)
     {
       itMolecule++;
     }
@@ -887,6 +909,25 @@ void ReacSet::computeClosureF ()
   string                     seq;
 
   /*
+  ** Reset all molecules and reactions.
+  */
+  itMolecule = molecules.begin ();
+  while (itMolecule != molecules.end ())
+  {
+    mol = *itMolecule;
+    mol->inClosure = false;
+    itMolecule++;
+  }
+  itReaction = reactions.begin ();
+  while (itReaction != reactions.end ())
+  {
+    reac = *itReaction;
+    reac->inSet = true;
+    reac->applied = false;
+    itReaction++;
+  }
+
+  /*
   ** Clear the closure and copy all food molecules to it.
   */
   closure.clear ();
@@ -895,6 +936,7 @@ void ReacSet::computeClosureF ()
   {
     mol = *itFoodSet;
     closure.push_back (mol);
+    mol->inClosure = true;
     itFoodSet++;
   }
 
@@ -915,7 +957,7 @@ void ReacSet::computeClosureF ()
     reac = mol->getAsReactantFirst ();
     while (reac != NULL)
     {
-      if (isInReacSet (reac))
+      if (reac->inSet && !reac->applied)
       {
 	/*
 	** Check all reactants.
@@ -924,7 +966,7 @@ void ReacSet::computeClosureF ()
 	r = reac->getReactantFirst ();
 	while (r != NULL)
 	{
-	  if (!isInClosureF (r))
+	  if (!r->inClosure)
 	  {
 	    apply = false;
 	    break;
@@ -937,15 +979,20 @@ void ReacSet::computeClosureF ()
 	*/
 	if (apply)
 	{
+	  /*
+	  ** Add products to the closure.
+	  */
 	  p = reac->getProductFirst ();
 	  while (p != NULL)
 	  {
-	    if (!isInClosureF (p))
+	    if (!p->inClosure)
 	    {
 	      closure.push_back (p);
+	      p->inClosure = true;
 	    }
 	    p = reac->getProductNext ();
 	  }
+	  reac->applied = true;
 	}
       }
       /*
@@ -960,7 +1007,7 @@ void ReacSet::computeClosureF ()
     reac = mol->getAsProductFirst ();
     while (reac != NULL)
     {
-      if (isInReacSet (reac) && (reac->getDirection () == BI_DIR))
+      if ((reac->getDirection () == BI_DIR) && isInReacSet (reac) && !reac->applied)
       {
 	/*
 	** Check all products.
@@ -969,7 +1016,7 @@ void ReacSet::computeClosureF ()
 	p = reac->getProductFirst ();
 	while (p != NULL)
 	{
-	  if (!isInClosureF (p))
+	  if (!p->inClosure)
 	  {
 	    apply = false;
 	    break;
@@ -985,12 +1032,14 @@ void ReacSet::computeClosureF ()
 	  r = reac->getReactantFirst ();
 	  while (r != NULL)
 	  {
-	    if (!isInClosureF (r))
+	    if (!r->inClosure)
 	    {
 	      closure.push_back (r);
+	      r->inClosure = true;
 	    }
 	    r = reac->getReactantNext ();
 	  }
+	  reac->applied = true;
 	}
       }
       /*

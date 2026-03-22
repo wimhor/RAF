@@ -109,14 +109,15 @@ int main (int argc, char **argv)
       powerlawCatalysis ();
     }
     generateFileName (fName, i, l);
-    ofs.open (fName);
+    ofs.open (fName + ".crs");
     writeToFile (ofs);
     ofs.close ();
     /*
-    ofs.open ("bpm_old.txt");
+    ** For old-style format.
+    */
+    ofs.open (fName + "_old.crs");
     writeToFileOld (ofs);
     ofs.close ();
-    */
   }
   
  End_of_Routine:
@@ -569,7 +570,6 @@ void generateFileName (string& s, int i, int len)
     s.append ("0");
   }
   s.append (to_string (i));
-  s.append (".crs");
 }
 
 
