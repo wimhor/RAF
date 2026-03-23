@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 13 March 2026
+** Wim Hordijk   Last modified: 23 March 2026
 */
 
 #include "Reaction.h"
@@ -24,6 +24,7 @@ Reaction::Reaction (string id)
   itProduct = products.begin ();
   itCatalyst = catalysts.begin ();
   direction = UNI_DIR;
+  applied = false;
 }
 
 

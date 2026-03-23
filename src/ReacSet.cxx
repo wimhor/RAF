@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 18 March 2026
+** Wim Hordijk   Last modified: 23 March 2026
 */
 
 #include <string.h>
@@ -635,15 +635,13 @@ int ReacSet::applyRAFalgo ()
   while (itReaction != reactions.end ())
   {
     reac = *itReaction;
-    reac->applied = false;
     if (reac->getNrCatalysts () == 0)
     {
-      reac->inSet = false;
+      reac->applied = false;
       itReaction = reactions.erase (itReaction);
     }
     else
     {
-      reac->inSet = true;
       itReaction++;
     }
   }
@@ -660,36 +658,20 @@ int ReacSet::applyRAFalgo ()
     */
     computeClosureF ();
     /*
-    ** Remove all reactions for which not all the reactants and at least one
-    ** catalyst are in the closure of the food set.
+    ** Remove all reactions that were not applied during the closure computation (i.e.,
+    ** they do not have all their reactants in the closure), and also all applied
+    ** reactions that have no catalysts in the closure of the food set.
     */
     reactionsRemoved = false;
     itReaction = reactions.begin ();
     while (itReaction != reactions.end ())
     {
       reac = *itReaction;
-      /*
-      ** Check the reactants.
-      **
-      ** Note: In case of a bi-directional reaction, if all products are in the closure
-      **       then all reactants will be too, so no need to check both directions.
-      */
-      remove = false;
-      mol = reac->getReactantFirst ();
-      while (mol != NULL)
+      if (reac->applied)
       {
-	if (!mol->inClosure)
-	{
-	  remove = true;
-	  break;
-	}
-	mol = reac->getReactantNext ();
-      }
-      /*
-      ** Check catalysts, if still necessary.
-      */
-      if (!remove)
-      {
+	/*
+	** Check the catalysts.
+	*/
 	remove = true;
 	mol = reac->getCatalystFirst ();
 	while (mol != NULL)
@@ -702,12 +684,15 @@ int ReacSet::applyRAFalgo ()
 	  mol = reac->getCatalystNext ();
 	}
       }
+      else
+      {
+	remove = true;
+      }
       /*
       ** Remove the reaction, if so indicated.
       */
       if (remove)
       {
-	reac->inSet = false;
 	reac->applied = false;
 	itReaction = reactions.erase (itReaction);
 	reactionsRemoved = true;
@@ -721,7 +706,7 @@ int ReacSet::applyRAFalgo ()
 
   /*
   ** Remove all molecules that are not in the current closure of the food set.
-  */
+  **
   itMolecule = molecules.begin ();
   while (itMolecule != molecules.end ())
   {
@@ -735,6 +720,7 @@ int ReacSet::applyRAFalgo ()
       itMolecule = molecules.erase (itMolecule);
     }
   }
+  */
   
   /*
   ** Return the size of the resulting reaction set.
@@ -903,10 +889,10 @@ bool ReacSet::isInClosureF (Molecule *mol)
 
 void ReacSet::computeClosureF ()
 {
-  Molecule                  *mol, *r, *p;
-  Reaction                  *reac;
-  bool                       apply;
-  string                     seq;
+  bool      molsAdded;
+  Molecule *mol, *r, *p;
+  Reaction *reac;
+  bool      apply;
 
   /*
   ** Reset all molecules and reactions.
@@ -922,7 +908,6 @@ void ReacSet::computeClosureF ()
   while (itReaction != reactions.end ())
   {
     reac = *itReaction;
-    reac->inSet = true;
     reac->applied = false;
     itReaction++;
   }
@@ -939,25 +924,23 @@ void ReacSet::computeClosureF ()
     mol->inClosure = true;
     itFoodSet++;
   }
-
+  molsAdded = true;
+  
   /*
-  ** Iteratively construct the closure of the food set.
+  ** Iteratively construct the closure of the food set while new molecules
+  ** were still added.
   */
-  itClosure = closure.begin ();
-  while (itClosure != closure.end ())
+  while (molsAdded)
   {
+    molsAdded = false;
     /*
-    ** Get the next molecule from the closure so far.
+    ** Check all current reactions that were not already applied.
     */
-    mol = *itClosure;
-    /*
-    ** Check all reactions for which the current molecule is a reactant and
-    ** which are still in the reactino set and see if they can be applied.
-    */
-    reac = mol->getAsReactantFirst ();
-    while (reac != NULL)
+    itReaction = reactions.begin ();
+    while (itReaction != reactions.end ())
     {
-      if (reac->inSet && !reac->applied)
+      reac = *itReaction;
+      if (!reac->applied)
       {
 	/*
 	** Check all reactants.
@@ -975,7 +958,8 @@ void ReacSet::computeClosureF ()
 	}
 	/*
 	** If the reaction can be applied, add all products to the closure if
-	** they are not already in there.
+	** they are not already in there. Otherwise, check the reverse direction
+	** if the reaction is bi-directional.
 	*/
 	if (apply)
 	{
@@ -993,80 +977,51 @@ void ReacSet::computeClosureF ()
 	    p = reac->getProductNext ();
 	  }
 	  reac->applied = true;
+	  molsAdded = true;
 	}
-      }
-      /*
-      ** Get the next reaction.
-      */
-      reac = mol->getAsReactantNext ();
-    }
-    /*
-    ** Check all bi-directional reactions for which the current molecule is a product
-    ** and see if they can be applied.
-    */
-    reac = mol->getAsProductFirst ();
-    while (reac != NULL)
-    {
-      if ((reac->getDirection () == BI_DIR) && isInReacSet (reac) && !reac->applied)
-      {
-	/*
-	** Check all products.
-	*/
-	apply = true;
-	p = reac->getProductFirst ();
-	while (p != NULL)
+	else if (reac->getDirection () == BI_DIR)
 	{
-	  if (!p->inClosure)
+	  /*
+	  ** Check all products.
+	  */
+	  apply = true;
+	  p = reac->getProductFirst ();
+	  while (p != NULL)
 	  {
-	    apply = false;
-	    break;
-	  }
-	  p = reac->getProductNext ();
-	}
-	/*
-	** If the reaction can be applied, add all reactants to the closure if
-	** they are not already in there.
-	*/
-	if (apply)
-	{
-	  r = reac->getReactantFirst ();
-	  while (r != NULL)
-	  {
-	    if (!r->inClosure)
+	    if (!p->inClosure)
 	    {
-	      closure.push_back (r);
-	      r->inClosure = true;
+	      apply = false;
+	      break;
 	    }
-	    r = reac->getReactantNext ();
+	    p = reac->getProductNext ();
 	  }
-	  reac->applied = true;
+	  /*
+	  ** If the reaction can be applied, add all reactants to the closure if
+	  ** they are not already in there.
+	  */
+	  if (apply)
+	  {
+	    r = reac->getReactantFirst ();
+	    while (r != NULL)
+	    {
+	      if (!r->inClosure)
+	      {
+		closure.push_back (r);
+		r->inClosure = true;
+	      }
+	      r = reac->getReactantNext ();
+	    }
+	    reac->applied = true;
+	    molsAdded = true;
+	  }
 	}
       }
       /*
       ** Get the next reaction.
       */
-      reac = mol->getAsProductNext ();
+      itReaction++;
     }
-    /*
-    ** Get the next molecule in the current closure.
-    */
-    itClosure++;
   }
-  
-  /*
-  ** Print the closure (for debugging purposes only).
-  **
-  cout << "Closure (" << closure.size () << "): ";
-  itMolecule = closure.begin ();
-  while (itMolecule != closure.end ())
-  {
-    mol = *itMolecule;
-    mol->getSequence (&seq);
-    cout << seq << " ";
-    itMolecule++;
-  }
-  cout << endl;
-  */
 }
 
 
@@ -1623,6 +1578,35 @@ int ReacSet::applyCAFalgo ()
   list<Reaction*>::iterator  itCAF;
 
   /*
+  ** First remove all reactions that have no catalysts.
+  */
+  itReaction = reactions.begin ();
+  while (itReaction != reactions.end ())
+  {
+    reac = *itReaction;
+    reac->applied = false;
+    if (reac->getNrCatalysts () == 0)
+    {
+      itReaction = reactions.erase (itReaction);
+    }
+    else
+    {
+      itReaction++;
+    }
+  }
+  
+  /*
+  ** Reset all molecules.
+  */
+  itMolecule = molecules.begin ();
+  while (itMolecule != molecules.end ())
+  {
+    mol = *itMolecule;
+    mol->inClosure = false;
+    itMolecule++;
+  }
+
+  /*
   ** Clear the closure and copy all food molecules to it.
   */
   closure.clear ();
@@ -1631,28 +1615,29 @@ int ReacSet::applyCAFalgo ()
   {
     mol = *itFoodSet;
     closure.push_back (mol);
+    mol->inClosure = true;
     itFoodSet++;
   }
 
   /*
-  ** Iteratively add reactions that can proceed catalyzed and their products.
+  ** Iteratively add reactions that can proceed catalyzed, and add their products
+  ** to the closure.
   */
   reacsAdded = true;
   while (reacsAdded)
   {
     reacsAdded = false;
     /*
-    ** Check each reaction to see if it can proceed catalyzed.
+    ** Check each reaction that has not been applied yet.
     */
     itReaction = reactions.begin ();
     while (itReaction != reactions.end ())
     {
       /*
-      ** If the reaction has not already been applied, check if it can now.
+      ** If the reaction has not already been applied, check if it can be now.
       */
       reac = *itReaction;
-      itCAF = find (tmpCAF.begin (), tmpCAF.end (), reac);
-      if (itCAF == tmpCAF.end ())
+      if (!reac->applied)
       {
 	/*
 	** Check all reactants.
@@ -1661,7 +1646,7 @@ int ReacSet::applyCAFalgo ()
 	mol = reac->getReactantFirst ();
 	while (mol != NULL)
 	{
-	  if (!isInClosureF (mol))
+	  if (!mol->inClosure)
 	  {
 	    apply = false;
 	    break;
@@ -1677,7 +1662,7 @@ int ReacSet::applyCAFalgo ()
 	  mol = reac->getCatalystFirst ();
 	  while (mol != NULL)
 	  {
-	    if (isInClosureF (mol))
+	    if (mol->inClosure)
 	    {
 	      apply = true;
 	      break;
@@ -1687,7 +1672,7 @@ int ReacSet::applyCAFalgo ()
 	}
 	/*
 	** Apply the reaction, if so indicated. If not, check the reverse
-	** direction, if relevant.
+	** direction if the reaction is bi-directional.
 	*/
 	if (apply)
 	{
@@ -1698,12 +1683,14 @@ int ReacSet::applyCAFalgo ()
 	  mol = reac->getProductFirst ();
 	  while (mol != NULL)
 	  {
-	    if (!isInClosureF (mol))
+	    if (!mol->inClosure)
 	    {
 	      closure.push_back (mol);
+	      mol->inClosure = true;
 	    }
 	    mol = reac->getProductNext ();
 	  }
+	  reac->applied = true;
 	  reacsAdded = true;
 	}
 	else if (reac->getDirection () == BI_DIR)
@@ -1715,7 +1702,7 @@ int ReacSet::applyCAFalgo ()
 	  mol = reac->getProductFirst ();
 	  while (mol != NULL)
 	  {
-	    if (!isInClosureF (mol))
+	    if (!mol->inClosure)
 	    {
 	      apply = false;
 	      break;
@@ -1731,7 +1718,7 @@ int ReacSet::applyCAFalgo ()
 	    mol = reac->getCatalystFirst ();
 	    while (mol != NULL)
 	    {
-	      if (isInClosureF (mol))
+	      if (mol->inClosure)
 	      {
 		apply = true;
 		break;
@@ -1751,12 +1738,14 @@ int ReacSet::applyCAFalgo ()
 	    mol = reac->getReactantFirst ();
 	    while (mol != NULL)
 	    {
-	      if (!isInClosureF (mol))
+	      if (!mol->inClosure)
 	      {
 		closure.push_back (mol);
+		mol->inClosure = true;
 	      }
 	      mol = reac->getReactantNext ();
 	    }
+	    reac->applied = true;
 	    reacsAdded = true;
 	  }
 	}
@@ -1782,7 +1771,7 @@ int ReacSet::applyCAFalgo ()
 
   /*
   ** Remove all molecules that are not in the current closure.
-  */
+  **
   itMolecule = molecules.begin ();
   while (itMolecule != molecules.end ())
   {
@@ -1796,6 +1785,7 @@ int ReacSet::applyCAFalgo ()
       itMolecule = molecules.erase (itMolecule);
     }
   }
+  */
   
   /*
   /*
