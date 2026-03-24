@@ -51,15 +51,15 @@ Molecule::~Molecule ()
 ** getSequence: Get the molecule sequence.
 **
 ** Parameters:
-**   - seq: A pointer to a string to hold (a copy of) the molecule sequence.
+**   - seq: A string to hold (a copy of) the molecule sequence.
 */
 
-void Molecule::getSequence (string *seq)
+void Molecule::getSequence (string& seq)
 {
   /*
   ** Copy the molecule sequence.
   */
-  seq->assign (sequence);
+  seq.assign (sequence);
 }
 
 

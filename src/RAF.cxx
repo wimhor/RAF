@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 14 March 2026
+** Wim Hordijk   Last modified: 24 March 2026
 */
 
 #include <iostream>
@@ -18,7 +18,7 @@ int getArguments (int argc, char **argv);
 /*
 ** Global variables.
 */
-bool   computeMaxRAF, computeCAF, computeIRAFs, computeCRAFs, showID, showReac;
+bool   computeMaxRAF, computeCAF, computeiRAFs, computecRAFs, showID, showReac;
 string inputFile;
 
 /*
@@ -88,13 +88,13 @@ int main (int argc, char **argv)
     */
     rSize = rSet->findMaxRAF ();
     cout << "maxRAF: " << rSize << endl;
-    if (showID && !showReac)
-    {
-      rSet->printMaxRAF (false);
-    }
-    else if (showReac)
+    if (showReac)
     {
       rSet->printMaxRAF (true);
+    }
+    else if (showID)
+    {
+      rSet->printMaxRAF (false);
     }
   }
   if (computeCAF)
@@ -104,13 +104,29 @@ int main (int argc, char **argv)
     */
     rSize = rSet->findCAF ();
     cout << "CAF: " << rSize << endl;
-    if (showID && !showReac)
+    if (showReac)
+    {
+      rSet->printCAF (true);
+    }
+    else if (showID)
     {
       rSet->printCAF (false);
     }
-    else if (showReac)
+  }
+  if (computeiRAFs)
+  {
+    /*
+    ** Find all iRAFs.
+    */
+    rSize = rSet->findiRAFs ();
+    cout << "iRAFs: " << rSize << endl;
+    if (showReac)
     {
-      rSet->printCAF (true);
+      rSet->printiRAFs (true);
+    }
+    else if (showID)
+    {
+      rSet->printiRAFs (false);
     }
   }
   
@@ -150,8 +166,8 @@ int getArguments (int argc, char **argv)
   */
   computeMaxRAF = false;
   computeCAF = false;
-  computeIRAFs = false;
-  computeCRAFs = false;
+  computeiRAFs = false;
+  computecRAFs = false;
   showID = false;
   showReac = false;
   inputFile.assign ("");
@@ -170,12 +186,15 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-maxRAF] [-CAF] [-id] [-reac] [-help]" << endl << endl
+	 << " <inFile> [-maxRAF] [-CAF] [-iRAFs] [-show {none|ID|reac}] [-help]"
+	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -maxRAF:  Compute the maxRAF." << endl
 	 << "  -CAF:     Compute the CAF." << endl
-	 << "  -id:      Show RAF reaction IDs." << endl
-	 << "  -reac:    Show RAF reactions in full." << endl
+	 << "  -iRAFs:   Compute all iRAFs." << endl
+	 << "  -show S:  What to show: 'none' (default) = no reactions, 'ID' = reaction ID"
+	 << endl
+	 << "            only, 'reac' = full reactions." << endl
 	 << "  -help:    Print this help message and exit." << endl;
     goto End_of_Routine;
   }
@@ -193,20 +212,48 @@ int getArguments (int argc, char **argv)
       computeCAF = true;
       i++;
     }
-    else if (strcmp (argv[i], "-id") == 0)
+    else if (strcmp (argv[i], "-iRAFs") == 0)
     {
-      showID = true;
+      computeiRAFs = true;
       i++;
     }
-    else if (strcmp (argv[i], "-reac") == 0)
+    else if (strcmp (argv[i], "-show") == 0)
     {
-      showReac = true;
+      i++;
+      if (i >= argc)
+      {
+	status = -1;
+	cerr << "Missing value for argument '-show'." << endl;
+	goto End_of_Routine;
+      }
+      else if (strcmp (argv[i], "none") == 0)
+      {
+	showID = false;
+	showReac = false;
+      }
+      else if (strcmp (argv[i], "ID") == 0)
+      {
+	showID = true;
+	showReac = false;
+      }
+      else if (strcmp (argv[i], "reac") == 0)
+      {
+	showID = false;
+	showReac = true;
+      }
+      else
+      {
+	status = -1;
+	cerr << "Invalid value for argument '-show': " << argv[i] << "." << endl
+	     << "  Should be 'none', 'ID', or 'reac'." << endl;
+	goto End_of_Routine;
+      }
       i++;
     }
     else
     {
       status = -1;
-      cerr << "Unknow option " << argv[i] << endl;
+      cerr << "Unknow option " << argv[i] << "." << endl;
       goto End_of_Routine;
     }
   }

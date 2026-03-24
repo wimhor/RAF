@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 23 March 2026
+** Wim Hordijk   Last modified: 24 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -60,12 +60,14 @@ class ReacSet
   bool      isInClosureF       (Molecule *mol);
   int       findCAF            ();
   int       findiRAFs          ();
-  int       findcRAFs          ();
+  int       findcRAFs          (ReacSet *main);
   int       readFromFile       (ifstream& is);
   void      writeToFile        (ofstream& os);
   void      printReaction      (Reaction *reac);
+  void      printReacSet       (bool full);
   void      printMaxRAF        (bool full);
   void      printCAF           (bool full);
+  void      printiRAFs         (bool full);
   void      copy               (ReacSet *orig);
   
  private:
@@ -74,11 +76,12 @@ class ReacSet
   */
   list<Molecule*>            molecules, foodSet, closure;
   list<Reaction*>            reactions;
-  list<ReacSet*>             iRAFs, cRAFs;
+  list<ReacSet*>             iRAFs, cRAFs, subRAFs;
   list<Molecule*>::iterator  itMolecule, itFoodSet, itClosure;
   list<Reaction*>::iterator  itReaction;
   list<ReacSet*>::iterator   itSubRAF;
   map<string,Molecule*>      molMap;
+  map<Reaction*,bool>        essential;
   ReacSet                   *maxRAF, *CAF;
 
   /*
@@ -86,6 +89,7 @@ class ReacSet
   */
   int  applyRAFalgo    ();
   int  applyCAFalgo    ();
+  int  applyiRAFsAlgo  (ReacSet *main);
   void computeClosureF ();
 };
 

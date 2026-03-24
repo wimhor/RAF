@@ -31,7 +31,7 @@ class Molecule
   /*
   ** Public member functions.
   */
-  void      getSequence         (string *seq);
+  void      getSequence         (string& seq);
   int       getSeqLength        ();
   void      addAsReactant       (Reaction *reac);
   void      removeAsReactant    (Reaction *reac);

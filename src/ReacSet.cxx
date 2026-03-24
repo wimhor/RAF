@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 23 March 2026
+** Wim Hordijk   Last modified: 24 March 2026
 */
 
 #include <string.h>
@@ -43,6 +43,7 @@ ReacSet::~ReacSet ()
   foodSet.clear ();
   closure.clear ();
   molMap.clear ();
+  essential.clear ();
   if (maxRAF != NULL)
   {
     delete maxRAF;
@@ -188,7 +189,7 @@ void ReacSet::addMolecule (Molecule *mol)
   ** See if an element with the given sequence already exists. If not, add it
   ** to the list.
   */
-  mol->getSequence (&seq);
+  mol->getSequence (seq);
   it = molMap.find (seq);
   if (it == molMap.end())
   {
@@ -213,7 +214,7 @@ void ReacSet::removeMolecule (Molecule *mol)
   ** Remove the molecule from the list.
   */
   molecules.remove (mol);
-  mol->getSequence (&seq);
+  mol->getSequence (seq);
   molMap.erase (seq);
 }
 
@@ -580,6 +581,7 @@ void ReacSet::addReaction (Reaction *reac)
   if (itReaction == reactions.end ())
   {
     reactions.push_back (reac);
+    essential[reac] = false;
   }
 }
 
@@ -597,6 +599,7 @@ void ReacSet::removeReaction (Reaction *reac)
   ** Remove the reaction from the list.
   */
   reactions.remove (reac);
+  essential.erase (reac);
 }
 
 
@@ -637,7 +640,6 @@ int ReacSet::applyRAFalgo ()
     reac = *itReaction;
     if (reac->getNrCatalysts () == 0)
     {
-      reac->applied = false;
       itReaction = reactions.erase (itReaction);
     }
     else
@@ -695,6 +697,7 @@ int ReacSet::applyRAFalgo ()
       {
 	reac->applied = false;
 	itReaction = reactions.erase (itReaction);
+	essential.erase (reac);
 	reactionsRemoved = true;
       }
       else
@@ -704,24 +707,6 @@ int ReacSet::applyRAFalgo ()
     }
   }
 
-  /*
-  ** Remove all molecules that are not in the current closure of the food set.
-  **
-  itMolecule = molecules.begin ();
-  while (itMolecule != molecules.end ())
-  {
-    mol = *itMolecule;
-    if (mol->inClosure)
-    {
-      itMolecule++;
-    }
-    else
-    {
-      itMolecule = molecules.erase (itMolecule);
-    }
-  }
-  */
-  
   /*
   ** Return the size of the resulting reaction set.
   */
@@ -741,15 +726,13 @@ int ReacSet::findMaxRAF ()
   int size;
 
   /*
-  ** Create a new reaction set to contain the maxRAF and copy the current
-  ** reaction set's content to it.
+  ** Create a copy of the current reaction set and apply the RAF algorithm to it.
   */
-  maxRAF = new ReacSet ();
+  if (maxRAF == NULL)
+  {
+    maxRAF = new ReacSet ();
+  }
   maxRAF->copy (this);
-  
-  /*
-  ** Apply the RAF algorithm on the new set.
-  */
   size = maxRAF->applyRAFalgo ();
 
   /*
@@ -1117,31 +1100,30 @@ int ReacSet::readFromFile (ifstream& is)
       goto End_of_Routine;
     }
     /*
-    ** Get the reactants and (optinally) their stoichiometry.
+    ** Get the reactants and (optionally) their stoichiometry.
     */
     token = strtok (segment, "+");
     while (token != NULL)
     {
-      n = 1;
-      if ((sscanf (token, "%d %s", &n, label) == 2) ||
-	  (sscanf (token, "%s", label) == 1))
+      if (sscanf (token, "%d %s", &n, label) != 2)
       {
-	if ((mol = getMoleculeBySeq (label)) == NULL)
+	if (sscanf (token, "%s", label) != 1)
 	{
-	  mol = new Molecule (label);
-	  addMolecule (mol);
+	  status = -1;
+	  cerr << "Invalid reactant in line " << lineNr << " of input file." << endl;
+	  goto End_of_Routine;	
 	}
-	/*
-	** Add the reactant. If it already existed, its stoichiometry will be updated.
-	*/
-	reac->addReactant (mol, n);
+	n = 1;
       }
-      else
+      if ((mol = getMoleculeBySeq (label)) == NULL)
       {
-	status = -1;
-	cerr << "Invalid reactant in line " << lineNr << " of input file." << endl;
-	goto End_of_Routine;	
+	mol = new Molecule (label);
+	addMolecule (mol);
       }
+      /*
+      ** Add the reactant. If it already existed, its stoichiometry will be updated.
+      */
+      reac->addReactant (mol, n);
       token = strtok (NULL, "+");
     }
     /*
@@ -1165,26 +1147,25 @@ int ReacSet::readFromFile (ifstream& is)
     token = strtok (segment, "+");
     while (token != NULL)
     {
-      n = 1;
-      if ((sscanf (token, "%d %s", &n, label) == 2) ||
-	  (sscanf (token, "%s", label) == 1))
+      if (sscanf (token, "%d %s", &n, label) != 2)
       {
-	if ((mol = getMoleculeBySeq (label)) == NULL)
+	if (sscanf (token, "%s", label) != 1)
 	{
-	  mol = new Molecule (label);
-	  addMolecule (mol);
+	  status = -1;
+	  cerr << "Invalid product in line " << lineNr << " of input file." << endl;
+	  goto End_of_Routine;	
 	}
-	/*
-	** Add the product. If it already existed, its stoichiometry will be updated.
-	*/
-	reac->addProduct (mol, n);
+	n = 1;
       }
-      else
+      if ((mol = getMoleculeBySeq (label)) == NULL)
       {
-	status = -1;
-	cerr << "Invalid product in line " << lineNr << " of input file." << endl;
-	goto End_of_Routine;	
+	mol = new Molecule (label);
+	addMolecule (mol);
       }
+      /*
+      ** Add the product. If it already existed, its stoichiometry will be updated.
+      */
+      reac->addProduct (mol, n);
       token = strtok (NULL, "+");
     }
     /*
@@ -1289,7 +1270,7 @@ void ReacSet::writeToFile (ofstream& os)
   while (itMolecule != molecules.end ())
   {
     mol = *itMolecule;
-    mol->getSequence (&s);
+    mol->getSequence (s);
     os << s << "\t" << s << endl;
     itMolecule++;
   }
@@ -1303,7 +1284,7 @@ void ReacSet::writeToFile (ofstream& os)
   while (itFoodSet != foodSet.end ())
   {
     mol = *itFoodSet;
-    mol->getSequence (&s);
+    mol->getSequence (s);
     os << s << "\t" << s << endl;
     itFoodSet++;
   }
@@ -1330,7 +1311,7 @@ void ReacSet::writeToFile (ofstream& os)
       {
 	os << n << " ";
       }
-      mol->getSequence (&s);
+      mol->getSequence (s);
       os << s << " ";
       mol = reac->getReactantNext ();
       while (mol != NULL)
@@ -1341,7 +1322,7 @@ void ReacSet::writeToFile (ofstream& os)
 	{
 	  os << n << " ";
 	}
-	mol->getSequence (&s);
+	mol->getSequence (s);
 	os << s << " ";
 	mol = reac->getReactantNext ();
       }
@@ -1368,7 +1349,7 @@ void ReacSet::writeToFile (ofstream& os)
       {
 	os << n << " ";
       }
-      mol->getSequence (&s);
+      mol->getSequence (s);
       os << s;
       mol = reac->getProductNext ();
       while (mol != NULL)
@@ -1379,7 +1360,7 @@ void ReacSet::writeToFile (ofstream& os)
 	{
 	  os << n << " ";
 	}
-	mol->getSequence (&s);
+	mol->getSequence (s);
 	os << s;
 	mol = reac->getProductNext ();
       }
@@ -1391,12 +1372,12 @@ void ReacSet::writeToFile (ofstream& os)
     mol = reac->getCatalystFirst ();
     if (mol != NULL)
     {
-      mol->getSequence (&s);
+      mol->getSequence (s);
       os << s;
       mol = reac->getCatalystNext ();
       while (mol != NULL)
       {
-	mol->getSequence (&s);
+	mol->getSequence (s);
 	os << " " << s;
 	mol = reac->getCatalystNext ();
       }
@@ -1421,6 +1402,7 @@ void ReacSet::writeToFile (ofstream& os)
 
 void ReacSet::printReaction (Reaction *reac)
 {
+  int       n;
   string    s;
   Molecule *mol;
 
@@ -1429,13 +1411,24 @@ void ReacSet::printReaction (Reaction *reac)
   mol = reac->getReactantFirst ();
   if (mol != NULL)
   {
-    mol->getSequence (&s);
+    n = reac->getReacStoich (mol);
+    if (n > 1)
+    {
+      cout << n << " ";
+    }
+    mol->getSequence (s);
     cout << s << " ";
     mol = reac->getReactantNext ();
     while (mol != NULL)
     {
-      mol->getSequence (&s);
-      cout << "+ " << s << " ";
+      cout << "+ ";
+      n = reac->getReacStoich (mol);
+      if (n > 1)
+      {
+	cout << n << " ";
+      }
+      mol->getSequence (s);
+      cout << s << " ";
       mol = reac->getReactantNext ();
     }
   }
@@ -1450,13 +1443,24 @@ void ReacSet::printReaction (Reaction *reac)
   mol = reac->getProductFirst ();
   if (mol != NULL)
   {
-    mol->getSequence (&s);
+    n = reac->getProdStoich (mol);
+    if (n > 1)
+    {
+      cout << n << " ";
+    }
+    mol->getSequence (s);
     cout << s << " ";
     mol = reac->getProductNext ();
     while (mol != NULL)
     {
-      mol->getSequence (&s);
-      cout << "+ " << s << " ";
+      cout << "+ ";
+      n = reac->getProdStoich (mol);
+      if (n > 1)
+      {
+	cout << n << " ";
+      }
+      mol->getSequence (s);
+      cout << s << " ";
       mol = reac->getProductNext ();
     }
   }
@@ -1464,12 +1468,12 @@ void ReacSet::printReaction (Reaction *reac)
   mol = reac->getCatalystFirst ();
   if (mol != NULL)
   {
-    mol->getSequence (&s);
+    mol->getSequence (s);
     cout << s;
     mol = reac->getCatalystNext ();
     while (mol != NULL)
     {
-      mol->getSequence (&s);
+      mol->getSequence (s);
       cout << " " << s;
       mol = reac->getCatalystNext ();
     }
@@ -1479,6 +1483,43 @@ void ReacSet::printReaction (Reaction *reac)
     cout << "_";
   }
   cout << ")" << endl;
+}
+
+
+/*
+** printReacSet: Print the current reaction set.
+**
+** Parameters:
+**   full: Boolean indicating whether to print the full reaction ('true') or
+**         only the reaction IDs ('false').
+*/
+
+void ReacSet::printReacSet (bool full)
+{
+  string    s;
+  Reaction *reac;
+
+  /*
+  ** Print the reactions in the current set.
+  */
+  reac = getReactionFirst ();
+  while (reac != NULL)
+  {
+    if (full)
+    {
+      printReaction (reac);
+    }
+    else
+    {
+      reac->getID (&s);
+      cout << s << " ";
+    }
+    reac = getReactionNext ();
+  }
+  if (!full)
+  {
+    cout << endl;
+  }
 }
 
 
@@ -1498,11 +1539,16 @@ void ReacSet::printMaxRAF (bool full)
   /*
   ** Print the reactions in the maxRAF.
   */
+  if (!full && (maxRAF->getNrReactions () > 0))
+  {
+    cout << "  ";
+  }
   reac = maxRAF->getReactionFirst ();
   while (reac != NULL)
   {
     if (full)
     {
+      cout << "  ";
       printReaction (reac);
     }
     else
@@ -1512,7 +1558,7 @@ void ReacSet::printMaxRAF (bool full)
     }
     reac = maxRAF->getReactionNext ();
   }
-  if (!full)
+  if (!full && (maxRAF->getNrReactions () > 0))
   {
     cout << endl;
   }
@@ -1546,7 +1592,10 @@ int ReacSet::findCAF ()
   /*
   ** Create a new reaction set to contain the CAF.
   */
-  CAF = new ReacSet ();
+  if (CAF == NULL)
+  {
+    CAF = new ReacSet ();
+  }
   CAF->copy (this);
   
   /*
@@ -1770,24 +1819,6 @@ int ReacSet::applyCAFalgo ()
   }
 
   /*
-  ** Remove all molecules that are not in the current closure.
-  **
-  itMolecule = molecules.begin ();
-  while (itMolecule != molecules.end ())
-  {
-    mol = *itMolecule;
-    if (isInClosureF (mol))
-    {
-      itMolecule++;
-    }
-    else
-    {
-      itMolecule = molecules.erase (itMolecule);
-    }
-  }
-  */
-  
-  /*
   /*
   ** Return the size of the CAF.
   */
@@ -1811,11 +1842,16 @@ void ReacSet::printCAF (bool full)
   /*
   ** Print the reactions in the CAF.
   */
+  if (!full && (CAF->getNrReactions () > 0))
+  {
+    cout << "  ";
+  }
   reac = CAF->getReactionFirst ();
   while (reac != NULL)
   {
     if (full)
     {
+      cout << "  ";
       printReaction (reac);
     }
     else
@@ -1825,9 +1861,200 @@ void ReacSet::printCAF (bool full)
     }
     reac = CAF->getReactionNext ();
   }
-  if (!full)
+  if (!full && (CAF->getNrReactions () > 0))
   {
     cout << endl;
+  }
+}
+
+
+/*
+** findiRAFs: Find all iRAFs within the maxRAF.
+**
+** Returns:
+**   The number of iRAFS found.
+*/
+
+int ReacSet::findiRAFs ()
+{
+  int nriRAFs;
+
+  /*
+  ** Apply the iRAF algorithm.
+  */
+  nriRAFs = 0;
+  if (maxRAF->getNrReactions () > 0)
+  {
+    nriRAFs = maxRAF->applyiRAFsAlgo (this);
+  }
+
+  /*
+  ** Return the result.
+  */
+  return (nriRAFs);
+}
+
+
+/*
+** applyiRAFsAlgo: Recursively find all iRAFs within a RAF.
+**
+** Parameters:
+**   - main: The "main" reaction set (where the results are stored).
+**
+** Returns:
+**   - The number of iRAFs found so far.
+*/
+
+int ReacSet::applyiRAFsAlgo (ReacSet *main)
+{
+  int       rSize;
+  bool      isiRAF, seen;
+  Reaction *reac;
+  ReacSet  *recurse, *subRAF;
+
+  /*
+  ** Remove each reaction in turn and apply the RAF algorithm.
+  */
+  itReaction = reactions.begin ();
+  while (itReaction != reactions.end ())
+  {
+    reac = *itReaction;
+    if (!essential[reac])
+    {
+      /*
+      ** Create a copy of the current reaction set, remove the current reaction,
+      ** and apply the RAF algorithm.
+      */
+      recurse = new ReacSet ();
+      recurse->copy (this);
+      recurse->removeReaction (reac);
+      rSize = recurse->applyRAFalgo ();
+      /*
+      ** Check the result and recurse, if needed.
+      */
+      if (rSize == 0)
+      {
+	/*
+	** Current reaction is essential.
+	*/
+	essential[reac] = true;
+	delete recurse;
+      }
+      else
+      {
+	/*
+	** Check if the smaller subRAF has already been seen.
+	*/
+	seen = false;
+	itSubRAF = main->subRAFs.begin ();
+	while (itSubRAF != main->subRAFs.end ())
+	{
+	  subRAF = *itSubRAF;
+	  if (recurse->compare (subRAF))
+	  {
+	    seen = true;
+	    break;
+	  }
+	  itSubRAF++;
+	}
+	/*
+	** If not yet seen, save and recurse. Otherwise, delete and ignore.
+	*/
+	if (!seen)
+	{
+	  (main->subRAFs).push_back (recurse);
+	  recurse->applyiRAFsAlgo (main);
+	}
+	else
+	{
+	  delete recurse;
+	}
+      }
+    }
+    /*
+    ** Get the next reaction.
+    */
+    itReaction++;
+  }
+
+  /*
+  ** Check if all reactions are essential.
+  */
+  isiRAF = true;
+  itReaction = reactions.begin ();
+  while (itReaction != reactions.end ())
+  {
+    reac = *itReaction;
+    if (!essential[reac])
+    {
+      isiRAF = false;
+      break;
+    }
+    itReaction++;
+  }
+  /*
+  ** If an iRAF, save the current reaction set.
+  */
+  if (isiRAF)
+  {
+    (main->iRAFs).push_back (this);
+  }
+
+  /*
+  ** Return the number of iRAFs found so far.
+  */
+  return ((main->iRAFs).size ());
+}
+
+
+/*
+** printiRAFs: Print the iRAFs (reation IDs only).
+**
+** Parameters:
+**   full: Print full reactions ('true') or only reaction IDs ('false').
+*/
+
+void ReacSet::printiRAFs (bool full)
+{
+  int       i;
+  string    s;
+  Reaction *reac;
+  ReacSet  *iraf;
+
+  /*
+  ** Print the reactions for each iRAF.
+  */
+  i = 1;
+  itSubRAF = iRAFs.begin ();
+  while (itSubRAF != iRAFs.end ())
+  {
+    iraf = *itSubRAF;
+    cout << "  " << i << ": ";
+    if (full)
+    {
+      cout << endl;
+    }
+    reac = iraf->getReactionFirst ();
+    while (reac != NULL)
+    {
+      if (full)
+      {
+	cout << "    ";
+	printReaction (reac);
+      }
+      else
+      {
+	reac->getID (&s);
+	cout << s << " ";
+      }
+      reac = iraf->getReactionNext ();
+    }
+    if (!full)
+    {
+      cout << endl;
+    }
+    i++;
+    itSubRAF++;
   }
 }
 
@@ -1842,15 +2069,22 @@ void ReacSet::printCAF (bool full)
 void ReacSet::copy (ReacSet *orig)
 {
   /*
-  ** Copy the molecule and reaction lists.
+  ** Clear the various lists and copy the contents of the original reaction set.
   */
+  molecules.clear ();
+  foodSet.clear ();
+  reactions.clear ();
+  closure.clear ();
+  molMap.clear ();
+  essential.clear ();
   molecules = orig->molecules;
   foodSet = orig->foodSet;
   reactions = orig->reactions;
+  molMap = orig->molMap;
+  essential = orig->essential;
   itMolecule = molecules.begin ();
   itFoodSet = foodSet.begin ();
   itReaction = reactions.begin ();
-  molMap = orig->molMap;
 }
 
 
