@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 24 March 2026
+** Wim Hordijk   Last modified: 25 March 2026
 */
 
 #include <iostream>
@@ -116,9 +116,19 @@ int main (int argc, char **argv)
   if (computeiRAFs)
   {
     /*
+    ** Check whether the maxRAF has been computed.
+    */
+    if (!computeMaxRAF)
+    {
+      status = 1;
+      cerr << "Cannot compute iRAFs if maxRAF is not computed." << endl;
+      goto End_of_Routine;
+    }
+    /*
     ** Find all iRAFs.
     */
-    rSize = rSet->findiRAFs ();
+    //rSize = rSet->findiRAFs ();
+    rSize = rSet->sampleiRAFs (10);
     cout << "iRAFs: " << rSize << endl;
     if (showReac)
     {

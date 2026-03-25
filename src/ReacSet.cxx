@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 24 March 2026
+** Wim Hordijk   Last modified: 25 March 2026
 */
 
 #include <string.h>
@@ -35,6 +35,8 @@ ReacSet::ReacSet ()
 
 ReacSet::~ReacSet ()
 {
+  ReacSet *rset;
+  
   /*
   ** Clear the lists.
   */
@@ -52,6 +54,13 @@ ReacSet::~ReacSet ()
   {
     delete CAF;
   }
+  itSubRAF = iRAFs.begin ();
+  while (itSubRAF != iRAFs.end ())
+  {
+    rset = *itSubRAF;
+    delete rset;
+  }
+  iRAFs.clear ();
 }
 
 
@@ -1238,7 +1247,7 @@ int ReacSet::readFromFile (ifstream& is)
 
 
 /*
-** writeToFile: Write the reaction set to an output file stream.
+** writeToFile: Write the reaction set to an output file stream (in the old format).
 **
 ** Parameters:
 **   - os: The output file stream to write to.
@@ -1464,10 +1473,10 @@ void ReacSet::printReaction (Reaction *reac)
       mol = reac->getProductNext ();
     }
   }
-  cout << "(";
-  mol = reac->getCatalystFirst ();
-  if (mol != NULL)
+  if (reac->getNrCatalysts () > 0)
   {
+    cout << "(";
+    mol = reac->getCatalystFirst ();
     mol->getSequence (s);
     cout << s;
     mol = reac->getCatalystNext ();
@@ -1477,12 +1486,8 @@ void ReacSet::printReaction (Reaction *reac)
       cout << " " << s;
       mol = reac->getCatalystNext ();
     }
+    cout << ")" << endl;
   }
-  if (reac->getNrCatalysts () == 0)
-  {
-    cout << "_";
-  }
-  cout << ")" << endl;
 }
 
 
@@ -1502,50 +1507,14 @@ void ReacSet::printReacSet (bool full)
   /*
   ** Print the reactions in the current set.
   */
-  reac = getReactionFirst ();
-  while (reac != NULL)
-  {
-    if (full)
-    {
-      printReaction (reac);
-    }
-    else
-    {
-      reac->getID (&s);
-      cout << s << " ";
-    }
-    reac = getReactionNext ();
-  }
-  if (!full)
-  {
-    cout << endl;
-  }
-}
-
-
-/*
-** printMaxRAF: Print the maxRAF set.
-**
-** Parameters:
-**   full: Boolean indicating whether to print the full reaction ('true') or
-**         only the reaction IDs ('false').
-*/
-
-void ReacSet::printMaxRAF (bool full)
-{
-  string    s;
-  Reaction *reac;
-
-  /*
-  ** Print the reactions in the maxRAF.
-  */
-  if (!full && (maxRAF->getNrReactions () > 0))
+  if (!full && (reactions.size () > 0))
   {
     cout << "  ";
   }
-  reac = maxRAF->getReactionFirst ();
-  while (reac != NULL)
+  itReaction = reactions.begin ();
+  while (itReaction != reactions.end ())
   {
+    reac = *itReaction;
     if (full)
     {
       cout << "  ";
@@ -1556,12 +1525,29 @@ void ReacSet::printMaxRAF (bool full)
       reac->getID (&s);
       cout << s << " ";
     }
-    reac = maxRAF->getReactionNext ();
+    itReaction++;
   }
-  if (!full && (maxRAF->getNrReactions () > 0))
+  if (!full && (reactions.size () > 0))
   {
     cout << endl;
   }
+}
+
+
+/*
+** printMaxRAF: Print the maxRAF reaction set.
+**
+** Parameters:
+**   full: Boolean indicating whether to print the full reaction ('true') or
+**         only the reaction IDs ('false').
+*/
+
+void ReacSet::printMaxRAF (bool full)
+{
+  /*
+  ** Print the maxRAF reaction set.
+  */
+  maxRAF->printReacSet (full);
 }
 
 
@@ -1827,7 +1813,7 @@ int ReacSet::applyCAFalgo ()
 
 
 /*
-** printCAF: Print the CAF set.
+** printCAF: Print the CAF reaction set.
 **
 ** Parameters:
 **   full: Boolean indicating whether to print the full reaction ('true') or
@@ -1836,35 +1822,10 @@ int ReacSet::applyCAFalgo ()
 
 void ReacSet::printCAF (bool full)
 {
-  string    s;
-  Reaction *reac;
-
   /*
-  ** Print the reactions in the CAF.
+  ** Print the CAF reaction set.
   */
-  if (!full && (CAF->getNrReactions () > 0))
-  {
-    cout << "  ";
-  }
-  reac = CAF->getReactionFirst ();
-  while (reac != NULL)
-  {
-    if (full)
-    {
-      cout << "  ";
-      printReaction (reac);
-    }
-    else
-    {
-      reac->getID (&s);
-      cout << s << " ";
-    }
-    reac = CAF->getReactionNext ();
-  }
-  if (!full && (CAF->getNrReactions () > 0))
-  {
-    cout << endl;
-  }
+  CAF->printReacSet (full);
 }
 
 
@@ -1877,7 +1838,9 @@ void ReacSet::printCAF (bool full)
 
 int ReacSet::findiRAFs ()
 {
-  int nriRAFs;
+  int      nriRAFs;
+  ReacSet *sraf;
+  list<ReacSet*>::iterator itRSet;
 
   /*
   ** Apply the iRAF algorithm.
@@ -1885,9 +1848,25 @@ int ReacSet::findiRAFs ()
   nriRAFs = 0;
   if (maxRAF->getNrReactions () > 0)
   {
-    nriRAFs = maxRAF->applyiRAFsAlgo (this);
+    nriRAFs = maxRAF->applyiRAFsAlgo (subRAFs, iRAFs);
   }
 
+  /*
+  ** Clear the list of seen subRAFs.
+  */
+  itSubRAF = subRAFs.begin ();
+  while (itSubRAF != subRAFs.end ())
+  {
+    sraf = *itSubRAF;
+    itRSet = find (iRAFs.begin (), iRAFs.end (), sraf);
+    if (itRSet == iRAFs.end ())
+    {
+      delete sraf;
+    }
+    itSubRAF++;
+  }
+  subRAFs.clear ();
+  
   /*
   ** Return the result.
   */
@@ -1899,13 +1878,14 @@ int ReacSet::findiRAFs ()
 ** applyiRAFsAlgo: Recursively find all iRAFs within a RAF.
 **
 ** Parameters:
-**   - main: The "main" reaction set (where the results are stored).
+**   - S: A list of subRAFs seen so far.
+**   - I: A list of iRAFs found so far.
 **
 ** Returns:
 **   - The number of iRAFs found so far.
 */
 
-int ReacSet::applyiRAFsAlgo (ReacSet *main)
+int ReacSet::applyiRAFsAlgo (list<ReacSet*>& S, list<ReacSet*>& I)
 {
   int       rSize;
   bool      isiRAF, seen;
@@ -1946,8 +1926,8 @@ int ReacSet::applyiRAFsAlgo (ReacSet *main)
 	** Check if the smaller subRAF has already been seen.
 	*/
 	seen = false;
-	itSubRAF = main->subRAFs.begin ();
-	while (itSubRAF != main->subRAFs.end ())
+	itSubRAF = S.begin ();
+	while (itSubRAF != S.end ())
 	{
 	  subRAF = *itSubRAF;
 	  if (recurse->compare (subRAF))
@@ -1962,8 +1942,8 @@ int ReacSet::applyiRAFsAlgo (ReacSet *main)
 	*/
 	if (!seen)
 	{
-	  (main->subRAFs).push_back (recurse);
-	  recurse->applyiRAFsAlgo (main);
+	  S.push_back (recurse);
+	  recurse->applyiRAFsAlgo (S, I);
 	}
 	else
 	{
@@ -1997,18 +1977,156 @@ int ReacSet::applyiRAFsAlgo (ReacSet *main)
   */
   if (isiRAF)
   {
-    (main->iRAFs).push_back (this);
+    I.push_back (this);
   }
 
   /*
   ** Return the number of iRAFs found so far.
   */
-  return ((main->iRAFs).size ());
+  return (I.size ());
 }
 
 
 /*
-** printiRAFs: Print the iRAFs (reation IDs only).
+** sampleiRAFs: Generate a sample of iRAFs within the maxRAF.
+**
+** Returns:
+**   The number of different iRAFS found.
+*/
+
+int ReacSet::sampleiRAFs (int sampleSize)
+{
+  int      i, nriRAFs;
+  ReacSet *sraf;
+  default_random_engine dre(time(NULL));
+  
+  /*
+  ** Clear the current list.
+  */
+  itSubRAF = iRAFs.begin ();
+  while (itSubRAF != iRAFs.end ())
+  {
+    sraf = *itSubRAF;
+    delete sraf;
+  }
+  iRAFs.clear ();
+  
+  /*
+  ** Generate random iRAFs and store them.
+  */
+  //seed = time (NULL);
+  nriRAFs = 0;
+  for (i = 0; i < sampleSize; i++)
+  {
+    sraf = randomiRAF (dre);
+    iRAFs.push_back (sraf);
+    nriRAFs++;
+  }
+  
+  /*
+  ** Return the result.
+  */
+  return (nriRAFs);
+}
+
+
+/*
+** randomiRAF: Find a random iRAF.
+**
+** Returns:
+**   A pointer to a reaction set containing an iRAF.
+*/
+
+ReacSet *ReacSet::randomiRAF (default_random_engine& dre)
+{
+  int                          i, reacIndex, rSize;
+  Reaction                    *reac;
+  ReacSet                     *sraf;
+  vector<Reaction*>            shuffledReacs;
+  vector<Reaction*>::iterator  itShufReac;
+
+  /*
+  ** Create a new reaction set and copy the maxRAF to it.
+  */
+  sraf = new ReacSet ();
+  sraf->copy (maxRAF);
+
+  /*
+  ** Copy the maxRAF reactions and randomly shuffle them.
+  */
+  reac = maxRAF->getReactionFirst ();
+  while (reac != NULL)
+  {
+    shuffledReacs.push_back (reac);
+    reac = maxRAF->getReactionNext ();
+  }
+  shuffle (shuffledReacs.begin(), shuffledReacs.end(), dre);
+
+  /*
+  ** For each next reaction in the shuffled list, remove it and apply the RAF algorithm.
+  */
+  reacIndex = 0;
+  while (reacIndex < shuffledReacs.size ())
+  {
+    /*
+    ** Remove the next reaction in the set.
+    */
+    itShufReac = shuffledReacs.begin ();
+    for (i = 0; i < reacIndex; i++)
+    {
+      itShufReac++;
+    }
+    reac = *itShufReac;
+    sraf->removeReaction (reac);
+    /*
+    ** Apply the RAF algorithm and check the result.
+    */
+    rSize = sraf->applyRAFalgo ();
+    if (rSize > 0)
+    {
+      /*
+      ** Non-empty RAF: Remove all non-RAF reactions.
+      */
+      itShufReac = shuffledReacs.begin ();
+      while (itShufReac != shuffledReacs.end ())
+      {
+	reac = *itShufReac;
+	if (!sraf->isInReacSet (reac))
+	{
+	  itShufReac = shuffledReacs.erase (itShufReac);
+	}
+	else
+	{
+	  itShufReac++;
+	}
+      }
+    }
+    else
+    {
+      /*
+      ** Empty RAF: Restore the RAF reactions and increase the index of
+      **            the reaction to be removed next.
+      */
+      itShufReac = shuffledReacs.begin ();
+      while (itShufReac != shuffledReacs.end ())
+      {
+	reac = *itShufReac;
+	sraf->addReaction (reac);
+	itShufReac++;
+      }
+      reacIndex++;
+    }
+  }
+
+  /*
+  ** Return the result.
+  */
+  return (sraf);
+}
+
+
+/*
+** printiRAFs: Print the iRAF reaction sets.
 **
 ** Parameters:
 **   full: Print full reactions ('true') or only reaction IDs ('false').
@@ -2016,44 +2134,21 @@ int ReacSet::applyiRAFsAlgo (ReacSet *main)
 
 void ReacSet::printiRAFs (bool full)
 {
-  int       i;
-  string    s;
-  Reaction *reac;
-  ReacSet  *iraf;
+  ReacSet *iraf;
 
   /*
-  ** Print the reactions for each iRAF.
+  ** Print the reaction set for each iRAF.
   */
-  i = 1;
   itSubRAF = iRAFs.begin ();
   while (itSubRAF != iRAFs.end ())
   {
     iraf = *itSubRAF;
-    cout << "  " << i << ": ";
+    cout << "  " << iraf->getNrReactions () << ":";
     if (full)
     {
       cout << endl;
     }
-    reac = iraf->getReactionFirst ();
-    while (reac != NULL)
-    {
-      if (full)
-      {
-	cout << "    ";
-	printReaction (reac);
-      }
-      else
-      {
-	reac->getID (&s);
-	cout << s << " ";
-      }
-      reac = iraf->getReactionNext ();
-    }
-    if (!full)
-    {
-      cout << endl;
-    }
-    i++;
+    iraf->printReacSet (full);
     itSubRAF++;
   }
 }
@@ -2063,13 +2158,13 @@ void ReacSet::printiRAFs (bool full)
 ** copy: Copy the reaction network of another ReacSet object into the current one.
 **
 ** Parameters:
-**   - orig: A pointer to another ReacSet object.
+**   - source: A pointer to another ReacSet object.
 */
 
-void ReacSet::copy (ReacSet *orig)
+void ReacSet::copy (ReacSet *source)
 {
   /*
-  ** Clear the various lists and copy the contents of the original reaction set.
+  ** Clear the various lists and copy the contents of the source reaction set.
   */
   molecules.clear ();
   foodSet.clear ();
@@ -2077,11 +2172,11 @@ void ReacSet::copy (ReacSet *orig)
   closure.clear ();
   molMap.clear ();
   essential.clear ();
-  molecules = orig->molecules;
-  foodSet = orig->foodSet;
-  reactions = orig->reactions;
-  molMap = orig->molMap;
-  essential = orig->essential;
+  molecules = source->molecules;
+  foodSet = source->foodSet;
+  reactions = source->reactions;
+  molMap = source->molMap;
+  essential = source->essential;
   itMolecule = molecules.begin ();
   itFoodSet = foodSet.begin ();
   itReaction = reactions.begin ();

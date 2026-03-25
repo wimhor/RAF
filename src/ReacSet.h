@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 24 March 2026
+** Wim Hordijk   Last modified: 25 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <vector>
+#include <random>
 #include "Reaction.h"
 
 using namespace std;
@@ -60,7 +61,8 @@ class ReacSet
   bool      isInClosureF       (Molecule *mol);
   int       findCAF            ();
   int       findiRAFs          ();
-  int       findcRAFs          (ReacSet *main);
+  int       sampleiRAFs        (int sampleSize);
+  int       findcRAFs          ();
   int       readFromFile       (ifstream& is);
   void      writeToFile        (ofstream& os);
   void      printReaction      (Reaction *reac);
@@ -87,10 +89,11 @@ class ReacSet
   /*
   ** Private member functions.
   */
-  int  applyRAFalgo    ();
-  int  applyCAFalgo    ();
-  int  applyiRAFsAlgo  (ReacSet *main);
-  void computeClosureF ();
+  int      applyRAFalgo    ();
+  int      applyCAFalgo    ();
+  int      applyiRAFsAlgo  (list<ReacSet*>& S, list<ReacSet*>& I);
+  ReacSet *randomiRAF      (default_random_engine& dre);
+  void     computeClosureF ();
 };
 
 
