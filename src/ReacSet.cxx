@@ -1832,6 +1832,9 @@ void ReacSet::printCAF (bool full)
 /*
 ** findiRAFs: Find all iRAFs within the maxRAF.
 **
+** Note: This is too slow, and only works for very small RAFs.
+**       Left this code in here just in case it can be improved.
+**
 ** Returns:
 **   The number of iRAFS found.
 */
@@ -1996,9 +1999,10 @@ int ReacSet::applyiRAFsAlgo (list<ReacSet*>& S, list<ReacSet*>& I)
 
 int ReacSet::sampleiRAFs (int sampleSize)
 {
-  int      i, nriRAFs;
-  ReacSet *sraf;
-  default_random_engine dre(time(NULL));
+  int                    i, nriRAFs;
+  bool                   seen;
+  ReacSet               *sraf, *iraf;
+  default_random_engine  dre(time(NULL));
   
   /*
   ** Clear the current list.
@@ -2014,13 +2018,38 @@ int ReacSet::sampleiRAFs (int sampleSize)
   /*
   ** Generate random iRAFs and store them.
   */
-  //seed = time (NULL);
   nriRAFs = 0;
   for (i = 0; i < sampleSize; i++)
   {
     sraf = randomiRAF (dre);
-    iRAFs.push_back (sraf);
-    nriRAFs++;
+    /*
+    ** Check if the iRAF was already seen earlier.
+    */
+    seen = false;
+    itSubRAF = iRAFs.begin ();
+    while (itSubRAF != iRAFs.end ())
+    {
+      iraf = *itSubRAF;
+      if (sraf->compare (iraf))
+      {
+	seen = true;
+	break;
+      }
+      itSubRAF++;
+    }
+    /*
+    ** If not seen before, save it. Otherwise, delete it.
+    */
+    if (!seen)
+    {
+      iRAFs.push_back (sraf);
+      nriRAFs++;
+    }
+    else
+    {
+      delete sraf;
+      sraf = NULL;
+    }
   }
   
   /*

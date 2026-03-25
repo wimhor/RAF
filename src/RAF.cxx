@@ -18,8 +18,10 @@ int getArguments (int argc, char **argv);
 /*
 ** Global variables.
 */
+int    smplSize;
 bool   computeMaxRAF, computeCAF, computeiRAFs, computecRAFs, showID, showReac;
 string inputFile;
+
 
 /*
 ** main: The main routine of the program.
@@ -125,10 +127,9 @@ int main (int argc, char **argv)
       goto End_of_Routine;
     }
     /*
-    ** Find all iRAFs.
+    ** Get an iRAF sample.
     */
-    //rSize = rSet->findiRAFs ();
-    rSize = rSet->sampleiRAFs (10);
+    rSize = rSet->sampleiRAFs (smplSize);
     cout << "iRAFs: " << rSize << endl;
     if (showReac)
     {
@@ -181,6 +182,7 @@ int getArguments (int argc, char **argv)
   showID = false;
   showReac = false;
   inputFile.assign ("");
+  smplSize = 10;
   
   /*
   ** Get and check all arguments.
@@ -196,15 +198,16 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-maxRAF] [-CAF] [-iRAFs] [-show {none|ID|reac}] [-help]"
+	 << " <inFile> [-maxRAF] [-CAF] [-iRAFs S] [-print {none|ID|reac}] [-help]"
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -maxRAF:  Compute the maxRAF." << endl
 	 << "  -CAF:     Compute the CAF." << endl
-	 << "  -iRAFs:   Compute all iRAFs." << endl
-	 << "  -show S:  What to show: 'none' (default) = no reactions, 'ID' = reaction ID"
+	 << "  -iRAF S:  Generate a sample of iRAFs of size S (only unique ones are saved)."
 	 << endl
-	 << "            only, 'reac' = full reactions." << endl
+	 << "  -print P: What to print: 'none' = no reactions (default), 'ID' = reaction"
+	 << endl
+	 << "            IDs only, 'reac' = full reactions." << endl
 	 << "  -help:    Print this help message and exit." << endl;
     goto End_of_Routine;
   }
@@ -222,18 +225,31 @@ int getArguments (int argc, char **argv)
       computeCAF = true;
       i++;
     }
-    else if (strcmp (argv[i], "-iRAFs") == 0)
-    {
-      computeiRAFs = true;
-      i++;
-    }
-    else if (strcmp (argv[i], "-show") == 0)
+    else if (strcmp (argv[i], "-iRAF") == 0)
     {
       i++;
       if (i >= argc)
       {
 	status = -1;
-	cerr << "Missing value for argument '-show'." << endl;
+	cerr << "Missing value for argument '-iRAF'." << endl;
+	goto End_of_Routine;
+      }
+      if ((sscanf (argv[i], "%d", &smplSize) != 1) || (smplSize < 1))
+      {
+	status = -1;
+	cerr << "Invalid value for iRAF sample size: " << argv[i] << endl;
+	goto End_of_Routine;
+      }
+      computeiRAFs = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-print") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+	status = -1;
+	cerr << "Missing value for argument '-print'." << endl;
 	goto End_of_Routine;
       }
       else if (strcmp (argv[i], "none") == 0)
