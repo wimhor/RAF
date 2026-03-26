@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 25 March 2026
+** Wim Hordijk   Last modified: 26 March 2026
 */
 
 #include <iostream>
@@ -72,14 +72,6 @@ int main (int argc, char **argv)
   }
   ifs.close ();
 
-  /*
-  ** Write the reaction network to an output file.
-  **
-  ofs.open ("out.txt");
-  rSet->writeToFile (ofs);
-  ofs.close ();
-  */
-  
   /*
   ** Find various RAF sets as requested.
   */

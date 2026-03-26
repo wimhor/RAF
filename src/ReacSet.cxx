@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 25 March 2026
+** Wim Hordijk   Last modified: 26 March 2026
 */
 
 #include <string.h>
@@ -1247,165 +1247,6 @@ int ReacSet::readFromFile (ifstream& is)
 
 
 /*
-** writeToFile: Write the reaction set to an output file stream (in the old format).
-**
-** Parameters:
-**   - os: The output file stream to write to.
-*/
-
-void ReacSet::writeToFile (ofstream& os)
-{
-  int       n;
-  string    s;
-  Molecule *mol;
-  Reaction *reac;
-
-  /*
-  ** Write the reaction set.
-  **
-  ** Meta-data.
-  */
-  os << "<meta-data>" << endl;
-  os << "nrMolecules = " << molecules.size () << endl;
-  os << "nrFoodSet   = " << foodSet.size () << endl;
-  os << "nrReactions = " << reactions.size () << endl;
-  os << endl;
-
-  /*
-  ** Molecules.
-  */
-  os << "<molecules>" << endl;
-  itMolecule = molecules.begin ();
-  while (itMolecule != molecules.end ())
-  {
-    mol = *itMolecule;
-    mol->getSequence (s);
-    os << s << "\t" << s << endl;
-    itMolecule++;
-  }
-  os << endl;
-
-  /*
-  ** Food set.
-  */
-  os << "<food set>" << endl;
-  itFoodSet = foodSet.begin ();
-  while (itFoodSet != foodSet.end ())
-  {
-    mol = *itFoodSet;
-    mol->getSequence (s);
-    os << s << "\t" << s << endl;
-    itFoodSet++;
-  }
-  os << endl;
-
-  /*
-  ** Reactions.
-  */
-  os << "<reactions>" << endl;
-  itReaction = reactions.begin ();
-  while (itReaction != reactions.end ())
-  {
-    reac = *itReaction;
-    reac->getID (&s);
-    os << s << "\t";
-    /*
-    ** Reactants.
-    */
-    mol = reac->getReactantFirst ();
-    if (mol != NULL)
-    {
-      n = reac->getReacStoich (mol);
-      if (n > 1)
-      {
-	os << n << " ";
-      }
-      mol->getSequence (s);
-      os << s << " ";
-      mol = reac->getReactantNext ();
-      while (mol != NULL)
-      {
-	os << "+ ";
-	n = reac->getReacStoich (mol);
-	if (n > 1)
-	{
-	  os << n << " ";
-	}
-	mol->getSequence (s);
-	os << s << " ";
-	mol = reac->getReactantNext ();
-      }
-    }
-    /*
-    ** Reaction arrow.
-    */
-    if (reac->getDirection () == UNI_DIR)
-    {
-      os << "=> ";
-    }
-    else
-    {
-      os << "<=> ";
-    }
-    /*
-    ** Products.
-    */
-    mol = reac->getProductFirst ();
-    if (mol != NULL)
-    {
-      n = reac->getProdStoich (mol);
-      if (n > 1)
-      {
-	os << n << " ";
-      }
-      mol->getSequence (s);
-      os << s;
-      mol = reac->getProductNext ();
-      while (mol != NULL)
-      {
-	os << " + ";
-	n = reac->getProdStoich (mol);
-	if (n > 1)
-	{
-	  os << n << " ";
-	}
-	mol->getSequence (s);
-	os << s;
-	mol = reac->getProductNext ();
-      }
-    }
-    os << "\t";
-    /*
-    ** Catalysts.
-    */
-    mol = reac->getCatalystFirst ();
-    if (mol != NULL)
-    {
-      mol->getSequence (s);
-      os << s;
-      mol = reac->getCatalystNext ();
-      while (mol != NULL)
-      {
-	mol->getSequence (s);
-	os << " " << s;
-	mol = reac->getCatalystNext ();
-      }
-    }
-    if (reac->getNrCatalysts () == 0)
-    {
-      os << " ";
-    }
-    os << "\t";
-    /*
-    ** Reaction rate.
-    */
-    os << "1" << endl;
-    itReaction++;
-  }
-}
-
-
-/*
 ** printReaction: Print a reaction.
 */
 
@@ -2134,14 +1975,18 @@ ReacSet *ReacSet::randomiRAF (default_random_engine& dre)
     {
       /*
       ** Empty RAF: Restore the RAF reactions and increase the index of
-      **            the reaction to be removed next.
+      **            the reaction to be removed next. This is somewhat more
+      **            complicated than needed, to keep the reaction order the same.
       */
-      itShufReac = shuffledReacs.begin ();
-      while (itShufReac != shuffledReacs.end ())
+      reac = maxRAF->getReactionFirst ();
+      while (reac != NULL)
       {
-	reac = *itShufReac;
-	sraf->addReaction (reac);
-	itShufReac++;
+	itShufReac = find (shuffledReacs.begin (), shuffledReacs.end (), reac);
+	if (itShufReac != shuffledReacs.end ())
+	{
+	  sraf->addReaction (reac);
+	}
+	reac = maxRAF->getReactionNext ();
       }
       reacIndex++;
     }

@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 14 March 2026
+** Wim Hordijk   Last modified: 26 March 2026
 */
 
 #include <stdlib.h>
@@ -35,7 +35,6 @@ int  indexToString     (int index, string& s);
 int  stringToIndex     (string& s);
 void generateFileName  (string& s, int i, int len);
 void writeToFile       (ofstream& os);
-void writeToFileOld    (ofstream& os);
 
 /*
 ** Global variables.
@@ -111,12 +110,6 @@ int main (int argc, char **argv)
     generateFileName (fName, i, l);
     ofs.open (fName + ".crs");
     writeToFile (ofs);
-    ofs.close ();
-    /*
-    ** For old-style format.
-    */
-    ofs.open (fName + "_old.crs");
-    writeToFileOld (ofs);
     ofs.close ();
   }
   
@@ -627,75 +620,6 @@ void writeToFile (ofstream& os)
   for (i = 0; i < nrFoodMols; i++)
   {
     os << molecules[i] << endl;
-  }
-}
-
-
-/*
-** writeToFileOld: Write the reaction set to an output file stream in the old format.
-**
-** Parameters:
-**   - os: The output file stream to write to.
-*/
-
-void writeToFileOld (ofstream& os)
-{
-  int                 i, j, nrCat;
-  list<int>::iterator itCat;
-
-  /*
-  ** Write the meta data.
-  */
-  os << "<meta-data>" << endl
-     << "nrMolecules = " << nrMolecules << endl
-     << "nrFoodSet   = " << nrFoodMols << endl
-     << "nrReactions = " << nrReactions << endl << endl;
-  /*
-  ** Write the molecules.
-  */
-  os << "<molecules>" << endl;
-  for (i = 0; i < nrMolecules; i++)
-  {
-    os << "p" << molecules[i] << "\tp" << molecules[i] << endl;
-  }
-  os << endl;
-  /*
-  ** Write the food molecules.
-  */
-  os << "<food set>" << endl;
-  for (i = 0; i < nrFoodMols; i++)
-  {
-    os << "p" << molecules[i] << "\tp" << molecules[i] << endl;
-  }
-  os << endl;
-  /*
-  ** Write the reactions. 
-  */
-  os << "<reactions>"<< endl;
-  for (i = 0; i < nrReactions; i++)
-  {
-    os << "r" << i+1 << "\t" << "p" << reactions[i][0] << " + p" << reactions[i][1]
-       << " <=> p" << reactions[i][2] << "\t";
-    if ((nrCat = (catalysts[i]).size ()) > 0)
-    {
-      j = 1;
-      itCat = (catalysts[i]).begin ();
-      while (itCat != (catalysts[i]).end ())
-      {
-	os << "p" << molecules[*itCat];
-	if (j < nrCat)
-	{
-	  os << " ";
-	}
-	j++;
-	itCat++;
-      }
-    }
-    else
-    {
-      os << " ";
-    }
-    os << "\t1.0" << endl;
   }
 }
 
