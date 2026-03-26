@@ -35,12 +35,12 @@ to see the list of required and optional program arguments.
 Both programs require at least a certain number of arguments, while others are optional.
 
 For the `BinPolModel` program, the following arguments are required:
-  - `n`: The maximum polymer length (`n>1`).
+  - `n`: The maximum polymer length (`n > 1`).
   - `t`: The maximum food polymer length (`1 <= t <= n`).
   - `p`: The catalysis probability (`p >= 0.0`).
   
 while these are optional (defaults indicated):
-  - `-c C`:  The catalysis assignment method C: `unif` for uniform (default) or `plaw` for power law.
+  - `-c C`:  The catalysis assignment method C: `unif` for uniform (default) or `plaw` for power law (the value of `p` will be used for the power law parameter).
   - `-i I`:  The number of instances I to generate (`I > 0`, default = 1).
   - `-f`:    Do not allow food molecules to be catalysts.
   - `-s S`:  The random seed S (`S >= 0`, default = 0: use current time).
