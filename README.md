@@ -63,8 +63,10 @@ The `BinPolModel` program generates input files for the `RAF` program in the req
 
 See the example input file for the required format for the reaction network. (A detailed description will be added here soon(ish)).
 
-## Note
-This repo is under continuous development, and improvements and new functionality will hopefully be added over time.
+## Notes
+- This repo is under continuous development, and improvements and new functionality will hopefully be added over time.
+- For now the `BinPolModel` program uses an implementation of the Zipf distribution (zipf.c) by [Ken Christensen](https://cse.usf.edu/~kchriste/christen.html) to generate power law values. Will look into a built-in C++ alternative at some point.
+- Compiling and running these programs has been tested in a Linux environment. Although only standard C & C++ libraries are used, no guarantees are given that the programs work on other systems.
 
 ## Acknowledgements
 This repo was made possible in part by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic).
