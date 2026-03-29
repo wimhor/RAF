@@ -64,7 +64,7 @@ The `BinPolModel` program generates input files for the `RAF` program in the req
 
 Note that not all iRAFs or cRAFs may show up each time the program is run, but a sample size of 100 is generally enough to find them all.
 
-## Input formal
+## Input format
 See the example input file `example.crs` for the required format for the reaction network. A detailed description will be added here soon(ish).
 
 ## Notes
