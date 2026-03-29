@@ -57,16 +57,19 @@ while these are optional (defaults indicated):
   - `-help`:    Print this help message and exit.
 
 ## Example
-The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 7 reactions, which contains a CAF of 4 reactions and 3 iRAFs each of just 1 reaction. Run the following command to see these results:
+The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 iRAFs, and 6 cRAFs. Run the following command to see these results:
 
-    ./RAF example.crs -maxRAF -CAF -iRAF 10 -print ID
+    ./RAF example.crs -maxRAF -CAF -iRAF 100 -cRAF 100 -print ID
 
-See the example input file for the required format for the reaction network. (A detailed description will be added here soon(ish)).
+Note that not all iRAFs or cRAFs may show up each time the program is run, but a sample size of 100 is generally enough to find them all.
+
+## Input formal
+See the example input file `example.crs` for the required format for the reaction network. A detailed description will be added here soon(ish).
 
 ## Notes
 - This repo is under continuous development, and improvements and new functionality will hopefully be added over time.
 - For now the `BinPolModel` program uses an implementation of the Zipf distribution (zipf.c) by [Ken Christensen](https://cse.usf.edu/~kchriste/christen.html) to generate power law values. Will look into a built-in C++ alternative at some point.
-- Compiling and running these programs has been tested in a Linux environment. Although only standard C & C++ libraries are used, no guarantees are given that the programs work on other systems.
+- Compiling and running these programs has been tested in a Linux environment, and although only standard C & C++ libraries are used, no guarantees are given that the programs compile or work properly on other systems.
 
 ## Acknowledgements
 This repo was made possible in part by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic).
