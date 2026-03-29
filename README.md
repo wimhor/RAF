@@ -52,12 +52,13 @@ For the `RAF` program, the following argument is required:
 while these are optional (defaults indicated):
   - `-maxRAF`:  Compute the maxRAF.
   - `-CAF`:     Compute the CAF.
-  - `-iRAF S`:  Generate a sample of iRAFs of size S (only unique ones are saved).
+  - `-iRAF I`:  Generate a sample of size I of irreducible RAFs (only unique ones are saved).
+  - `-cRAF C`:  Generate a sample of size C of closed RAFs (only unique ones are saved).
   - `-print P`: What to print: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
   - `-help`:    Print this help message and exit.
 
 ## Example
-The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 iRAFs, and 6 cRAFs. Run the following command to see these results:
+The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 irreducible RAFs (iRAFs), and 6 closed RAFs (cRAFs). Run the following command to see these results:
 
     ./RAF example.crs -maxRAF -CAF -iRAF 100 -cRAF 100 -print ID
 
