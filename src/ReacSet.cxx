@@ -1866,36 +1866,39 @@ int ReacSet::sampleiRAFs (int sampleSize)
   ** Generate random iRAFs and store them.
   */
   nriRAFs = 0;
-  for (i = 0; i < sampleSize; i++)
+  if (maxRAF->getNrReactions () > 0)
   {
-    sraf = randomiRAF (dre);
-    /*
-    ** Check if the iRAF was already seen earlier.
-    */
-    seen = false;
-    itSubRAF = iRAFs.begin ();
-    while (itSubRAF != iRAFs.end ())
+    for (i = 0; i < sampleSize; i++)
     {
-      iraf = *itSubRAF;
-      if (sraf->compare (iraf))
+      sraf = randomiRAF (dre);
+      /*
+      ** Check if the iRAF was already seen earlier.
+      */
+      seen = false;
+      itSubRAF = iRAFs.begin ();
+      while (itSubRAF != iRAFs.end ())
       {
-	seen = true;
-	break;
+	iraf = *itSubRAF;
+	if (sraf->compare (iraf))
+	{
+	  seen = true;
+	  break;
+	}
+	itSubRAF++;
       }
-      itSubRAF++;
-    }
-    /*
-    ** If not seen before, save it. Otherwise, delete it.
-    */
-    if (!seen)
-    {
-      iRAFs.push_back (sraf);
-      nriRAFs++;
-    }
-    else
-    {
-      delete sraf;
-      sraf = NULL;
+      /*
+      ** If not seen before, save it. Otherwise, delete it.
+      */
+      if (!seen)
+      {
+	iRAFs.push_back (sraf);
+	nriRAFs++;
+      }
+      else
+      {
+	delete sraf;
+	sraf = NULL;
+      }
     }
   }
   
@@ -2062,17 +2065,21 @@ int ReacSet::samplecRAFs (int sampleSize)
   ** Generate random cRAFs and store them, and add the maxRAF.
   */
   nrcRAFs = 0;
-  for (i = 0; i < sampleSize; i++)
+  if (maxRAF->getNrReactions () > 0)
   {
-    nr = randomcRAF (dre);
-    nrcRAFs += nr;
+    for (i = 0; i < sampleSize; i++)
+    {
+      nr = randomcRAF (dre);
+      nrcRAFs += nr;
+    }
+    cRAFs.push_back (maxRAF);
+    nrcRAFs++;
   }
-  cRAFs.push_back (maxRAF);
   
   /*
   ** Return the result.
   */
-  return (nrcRAFs+1);
+  return (nrcRAFs);
 }
 
 
