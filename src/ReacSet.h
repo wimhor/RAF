@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 26 March 2026
+** Wim Hordijk   Last modified: 29 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -62,13 +62,15 @@ class ReacSet
   int       findCAF            ();
   int       findiRAFs          ();
   int       sampleiRAFs        (int sampleSize);
-  int       findcRAFs          ();
+  int       samplecRAFs        (int sampleSize);
+  bool      isClosed           (ReacSet *rset);
   int       readFromFile       (ifstream& is);
   void      printReaction      (Reaction *reac);
   void      printReacSet       (bool full);
   void      printMaxRAF        (bool full);
   void      printCAF           (bool full);
   void      printiRAFs         (bool full);
+  void      printcRAFs         (bool full);
   void      copy               (ReacSet *orig);
   
  private:
@@ -92,6 +94,7 @@ class ReacSet
   int      applyCAFalgo    ();
   int      applyiRAFsAlgo  (list<ReacSet*>& S, list<ReacSet*>& I);
   ReacSet *randomiRAF      (default_random_engine& dre);
+  int      randomcRAF      (default_random_engine& dre);
   void     computeClosureF ();
 };
 

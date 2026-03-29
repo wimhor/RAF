@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 26 March 2026
+** Wim Hordijk   Last modified: 29 March 2026
 */
 
 #include <string.h>
@@ -1705,7 +1705,11 @@ int ReacSet::findiRAFs ()
     itRSet = find (iRAFs.begin (), iRAFs.end (), sraf);
     if (itRSet == iRAFs.end ())
     {
-      delete sraf;
+      itRSet = find (cRAFs.begin (), cRAFs.end (), sraf);
+      if (itRSet == cRAFs.end ())
+      {
+	delete sraf;
+      }
     }
     itSubRAF++;
   }
@@ -1724,6 +1728,7 @@ int ReacSet::findiRAFs ()
 ** Parameters:
 **   - S: A list of subRAFs seen so far.
 **   - I: A list of iRAFs found so far.
+**   - C: A list of cRAFs found so far.
 **
 ** Returns:
 **   - The number of iRAFs found so far.
@@ -1767,6 +1772,10 @@ int ReacSet::applyiRAFsAlgo (list<ReacSet*>& S, list<ReacSet*>& I)
       else
       {
 	/*
+	** Check whether the smaller subRAF is closed.
+	*/
+	// To come...
+	/*
 	** Check if the smaller subRAF has already been seen.
 	*/
 	seen = false;
@@ -1802,7 +1811,7 @@ int ReacSet::applyiRAFsAlgo (list<ReacSet*>& S, list<ReacSet*>& I)
   }
 
   /*
-  ** Check if all reactions are essential.
+  ** Check if all reactions are essential, and save the current iRAF is so.
   */
   isiRAF = true;
   itReaction = reactions.begin ();
@@ -1816,9 +1825,6 @@ int ReacSet::applyiRAFsAlgo (list<ReacSet*>& S, list<ReacSet*>& I)
     }
     itReaction++;
   }
-  /*
-  ** If an iRAF, save the current reaction set.
-  */
   if (isiRAF)
   {
     I.push_back (this);
@@ -2023,6 +2029,263 @@ void ReacSet::printiRAFs (bool full)
       cout << endl;
     }
     iraf->printReacSet (full);
+    itSubRAF++;
+  }
+}
+
+
+/*
+** samplecRAFs: Generate a sample of cRAFs within the maxRAF.
+**
+** Returns:
+**   The number of different cRAFS found.
+*/
+
+int ReacSet::samplecRAFs (int sampleSize)
+{
+  int                    i, nr, nrcRAFs;
+  ReacSet               *sraf;
+  default_random_engine  dre(time(NULL));
+  
+  /*
+  ** Clear the current list.
+  */
+  itSubRAF = cRAFs.begin ();
+  while (itSubRAF != cRAFs.end ())
+  {
+    sraf = *itSubRAF;
+    delete sraf;
+  }
+  cRAFs.clear ();
+  
+  /*
+  ** Generate random cRAFs and store them, and add the maxRAF.
+  */
+  nrcRAFs = 0;
+  for (i = 0; i < sampleSize; i++)
+  {
+    nr = randomcRAF (dre);
+    nrcRAFs += nr;
+  }
+  cRAFs.push_back (maxRAF);
+  
+  /*
+  ** Return the result.
+  */
+  return (nrcRAFs+1);
+}
+
+
+/*
+** randomcRAF: Find random cRAFs.
+**
+** Returns:
+**   The number of cRAFs found.
+*/
+
+int ReacSet::randomcRAF (default_random_engine& dre)
+{
+  int                          rSize, nrcRAFs;
+  bool                         seen;
+  Reaction                    *reac, *reacRemove;
+  ReacSet                     *sraf, *craf;
+  vector<Reaction*>            shuffledReacs;
+  vector<Reaction*>::iterator  itShufReac;
+
+  /*
+  ** Create a new reaction set and copy the maxRAF to it.
+  */
+  sraf = new ReacSet ();
+  sraf->copy (maxRAF);
+
+  /*
+  ** Copy the maxRAF reactions and randomly shuffle them.
+  */
+  reac = maxRAF->getReactionFirst ();
+  while (reac != NULL)
+  {
+    shuffledReacs.push_back (reac);
+    reac = maxRAF->getReactionNext ();
+  }
+  shuffle (shuffledReacs.begin(), shuffledReacs.end(), dre);
+
+  /*
+  ** For each next reaction in the shuffled list, remove it and apply the RAF algorithm.
+  */
+  nrcRAFs = 0;
+  while (sraf->getNrReactions () > 0)
+  {
+    /*
+    ** Remove the next reaction in the set.
+    */
+    itShufReac = shuffledReacs.begin ();
+    reacRemove = *itShufReac;
+    sraf->removeReaction (reacRemove);
+    /*
+    ** Apply the RAF algorithm and check the result.
+    */
+    rSize = sraf->applyRAFalgo ();
+    if (rSize > 0)
+    {
+      /*
+      ** Non-empty subRAF: Remove all non-RAF reactions.
+      */
+      itShufReac = shuffledReacs.begin ();
+      while (itShufReac != shuffledReacs.end ())
+      {
+	reac = *itShufReac;
+	if (!sraf->isInReacSet (reac))
+	{
+	  itShufReac = shuffledReacs.erase (itShufReac);
+	}
+	else
+	{
+	  itShufReac++;
+	}
+      }
+      /*
+      ** If the subRAF is closed, save it if it has not been seen before.
+      */
+      if (isClosed (sraf))
+      {
+	seen = false;
+	itSubRAF = cRAFs.begin ();
+	while (itSubRAF != cRAFs.end ())
+	{
+	  craf = *itSubRAF;
+	  if (sraf->compare (craf))
+	  {
+	    seen = true;
+	    break;
+	  }
+	  itSubRAF++;
+	}
+	/*
+	** If not seen before, make a copy and save it.
+	*/
+	if (!seen)
+	{
+	  craf = new ReacSet ();
+	  craf->copy (sraf);
+	  cRAFs.push_back (craf);
+	  nrcRAFs++;
+	}
+      }
+    }
+  }
+
+  /*
+  ** Delete the temporary subRAF.
+  */
+  delete sraf;
+  
+  /*
+  ** Return the result.
+  */
+  return (nrcRAFs);
+}
+
+
+/*
+** isClosed: Check whether a given reaction set is closed within the maxRAF.
+**
+** Parameters:
+**   - rset: The reaction set to check for closure.
+**
+** Returns:
+**   - If the given reaction set is closed: true.
+**   - Otherwise:                           false.
+*/
+
+bool ReacSet::isClosed (ReacSet *rset)
+{
+  bool      closed, applied;
+  Molecule *mol;
+  Reaction *reac;
+  
+  /*
+  ** Check each reaction in the maxRAF that is not in the given set.
+  */
+  closed = true;
+  reac = maxRAF->getReactionFirst ();
+  while (reac != NULL)
+  {
+    if (!rset->isInReacSet (reac))
+    {
+      /*
+      ** Check all reactants of the current reaction.
+      */
+      applied = true;
+      mol = reac->getReactantFirst ();
+      while (mol != NULL)
+      {
+	if (!rset->isInClosureF (mol))
+	{
+	  applied = false;
+	  break;
+	}
+	mol = reac->getReactantNext ();
+      }
+      if (applied)
+      {
+	/*
+	** Check if at least one catalyst is in the closure of the food set.
+	*/
+	applied = false;
+	mol = reac->getCatalystFirst ();
+	while (mol != NULL)
+	{
+	  if (rset->isInClosureF (mol))
+	  {
+	    applied = true;
+	    break;
+	  }
+	  mol = reac->getCatalystNext ();
+	}
+      }
+      /*
+      ** If the reaction can be applied, then the reaction set is not closed.
+      */
+      if (applied)
+      {
+	closed = false;
+	break;
+      }
+    }
+    reac = maxRAF->getReactionNext ();
+  }
+
+  /*
+  ** Return the result.
+  */
+  return (closed);
+}
+
+
+/*
+** printcRAFs: Print the cRAF reaction sets.
+**
+** Parameters:
+**   full: Print full reactions ('true') or only reaction IDs ('false').
+*/
+
+void ReacSet::printcRAFs (bool full)
+{
+  ReacSet *craf;
+
+  /*
+  ** Print the reaction set for each cRAF.
+  */
+  itSubRAF = cRAFs.begin ();
+  while (itSubRAF != cRAFs.end ())
+  {
+    craf = *itSubRAF;
+    cout << "  " << craf->getNrReactions () << ":";
+    if (full)
+    {
+      cout << endl;
+    }
+    craf->printReacSet (full);
     itSubRAF++;
   }
 }

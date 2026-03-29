@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 26 March 2026
+** Wim Hordijk   Last modified: 29 March 2026
 */
 
 #include <iostream>
@@ -18,7 +18,7 @@ int getArguments (int argc, char **argv);
 /*
 ** Global variables.
 */
-int    smplSize;
+int    smplSizeI, smplSizeC;
 bool   computeMaxRAF, computeCAF, computeiRAFs, computecRAFs, showID, showReac;
 string inputFile;
 
@@ -121,7 +121,7 @@ int main (int argc, char **argv)
     /*
     ** Get an iRAF sample.
     */
-    rSize = rSet->sampleiRAFs (smplSize);
+    rSize = rSet->sampleiRAFs (smplSizeI);
     cout << "iRAFs: " << rSize << endl;
     if (showReac)
     {
@@ -130,6 +130,31 @@ int main (int argc, char **argv)
     else if (showID)
     {
       rSet->printiRAFs (false);
+    }
+  }
+  if (computecRAFs)
+  {
+    /*
+    ** Check whether the CAF has been computed.
+    */
+    if (!computeCAF)
+    {
+      status = 1;
+      cerr << "Cannot compute cRAFs if CAF is not computed." << endl;
+      goto End_of_Routine;
+    }
+    /*
+    ** Get a cRAF sample.
+    */
+    rSize = rSet->samplecRAFs (smplSizeC);
+    cout << "cRAFs: " << rSize << endl;
+    if (showReac)
+    {
+      rSet->printcRAFs (true);
+    }
+    else if (showID)
+    {
+      rSet->printcRAFs (false);
     }
   }
   
@@ -174,7 +199,8 @@ int getArguments (int argc, char **argv)
   showID = false;
   showReac = false;
   inputFile.assign ("");
-  smplSize = 10;
+  smplSizeI = 10;
+  smplSizeC = 10;
   
   /*
   ** Get and check all arguments.
@@ -190,12 +216,14 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-maxRAF] [-CAF] [-iRAFs S] [-print {none|ID|reac}] [-help]"
+	 << " <inFile> [-maxRAF] [-CAF] [-iRAF I] [-cRAF C] [-print {none|ID|reac}] [-help]"
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -maxRAF:  Compute the maxRAF." << endl
 	 << "  -CAF:     Compute the CAF." << endl
-	 << "  -iRAF S:  Generate a sample of iRAFs of size S (only unique ones are saved)."
+	 << "  -iRAF I:  Generate a sample of iRAFs of size I (only unique ones are saved)."
+	 << endl
+	 << "  -cRAF C:  Generate a sample of iRAFs of size C (only unique ones are saved)."
 	 << endl
 	 << "  -print P: What to print: 'none' = no reactions (default), 'ID' = reaction"
 	 << endl
@@ -226,13 +254,31 @@ int getArguments (int argc, char **argv)
 	cerr << "Missing value for argument '-iRAF'." << endl;
 	goto End_of_Routine;
       }
-      if ((sscanf (argv[i], "%d", &smplSize) != 1) || (smplSize < 1))
+      if ((sscanf (argv[i], "%d", &smplSizeI) != 1) || (smplSizeI < 1))
       {
 	status = -1;
 	cerr << "Invalid value for iRAF sample size: " << argv[i] << endl;
 	goto End_of_Routine;
       }
       computeiRAFs = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-cRAF") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+	status = -1;
+	cerr << "Missing value for argument '-cRAF'." << endl;
+	goto End_of_Routine;
+      }
+      if ((sscanf (argv[i], "%d", &smplSizeC) != 1) || (smplSizeC < 1))
+      {
+	status = -1;
+	cerr << "Invalid value for cRAF sample size: " << argv[i] << endl;
+	goto End_of_Routine;
+      }
+      computecRAFs = true;
       i++;
     }
     else if (strcmp (argv[i], "-print") == 0)
