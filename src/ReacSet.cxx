@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 29 March 2026
+** Wim Hordijk   Last modified: 30 March 2026
 */
 
 #include <string.h>
@@ -1673,167 +1673,153 @@ void ReacSet::printCAF (bool full)
 /*
 ** findiRAFs: Find all iRAFs within the maxRAF.
 **
-** Note: This is too slow, and only works for very small RAFs.
-**       Left this code in here just in case it can be improved.
-**
 ** Returns:
 **   The number of iRAFS found.
 */
 
 int ReacSet::findiRAFs ()
 {
-  int      nriRAFs;
-  ReacSet *sraf;
-  list<ReacSet*>::iterator itRSet;
+  int                             nriRAFs, rSize;
+  bool                            allFound;
+  Reaction                       *reac;
+  ReacSet                        *sraf, *iraf;
+  list<Reaction*>                 remove;
+  list<list<Reaction*>>           combinations;
+  list<Reaction*>::iterator       itRemove;
+  list<list<Reaction*>>::iterator itCombination;
+  list<ReacSet*>::iterator        itRSet;
+  default_random_engine           dre(time(NULL));
 
   /*
-  ** Apply the iRAF algorithm.
+  ** Clear the list of iRAFs.
   */
-  nriRAFs = 0;
-  if (maxRAF->getNrReactions () > 0)
+  itSubRAF = iRAFs.begin ();
+  while (itSubRAF != iRAFs.end ())
   {
-    nriRAFs = maxRAF->applyiRAFsAlgo (subRAFs, iRAFs);
-  }
-
-  /*
-  ** Clear the list of seen subRAFs.
-  */
-  itSubRAF = subRAFs.begin ();
-  while (itSubRAF != subRAFs.end ())
-  {
-    sraf = *itSubRAF;
-    itRSet = find (iRAFs.begin (), iRAFs.end (), sraf);
-    if (itRSet == iRAFs.end ())
-    {
-      itRSet = find (cRAFs.begin (), cRAFs.end (), sraf);
-      if (itRSet == cRAFs.end ())
-      {
-	delete sraf;
-      }
-    }
+    iraf = *itSubRAF;
+    delete iraf;
     itSubRAF++;
   }
-  subRAFs.clear ();
+  iRAFs.clear ();
+
+  /*
+  ** Find a random iRAF and create the list of reaction combinations for removal.
+  */
+  iraf = randomiRAF (dre);
+  iRAFs.push_back (iraf);
+  nriRAFs = 1;
+  combinations.clear ();
+  reac = iraf->getReactionFirst ();
+  while (reac != NULL)
+  {
+    remove.clear ();
+    remove.push_back (reac);
+    combinations.push_back (remove);
+    reac = iraf->getReactionNext ();
+  }
+
+  /*
+  ** While not all iRAFs are found yet, keep searching for new ones.
+  */
+  allFound = false;
+  sraf = new ReacSet ();
+  while (!allFound)
+  {
+    itCombination = combinations.begin ();
+    while (itCombination != combinations.end ())
+    {
+      /*
+      ** Remove the current combination of reactions from the maxRAF and find the
+      ** remaining maxRAF.
+      */
+      sraf->copy (maxRAF);
+      remove = *itCombination;
+      itRemove = remove.begin ();
+      while (itRemove != remove.end ())
+      {
+	reac = *itRemove;
+	sraf->removeReaction (reac);
+	itRemove++;
+      }
+      rSize = sraf->findMaxRAF ();
+      /*
+      ** Check the result.
+      */
+      if (rSize == 0)
+      {
+	/*
+	** Remove the current combination.
+	*/
+	itCombination = combinations.erase (itCombination);
+      }
+      else
+      {
+	/*
+	** Get the next combination.
+	*/
+	itCombination++;
+      }
+    }
+    /*
+    ** If the number of combinations left is zero, all iRAFs are found. If not,
+    ** find a next one and create new combinations for removal.
+    */
+    if (combinations.size () == 0)
+    {
+      allFound = true;
+    }
+    else
+    {
+      /*
+      ** Remove the first combination of reactions from the maxRAF and find a new iRAF.
+      */
+      sraf->copy (maxRAF);
+      itCombination = combinations.begin ();
+      remove = *itCombination;
+      itRemove = remove.begin ();
+      while (itRemove != remove.end ())
+      {
+	reac = *itRemove;
+	sraf->removeReaction (reac);
+	itRemove++;
+      }
+      rSize = sraf->findMaxRAF ();
+      iraf = sraf->randomiRAF (dre);
+      iRAFs.push_back (iraf);
+      nriRAFs++;
+      /*
+      ** For each existing combination, replace it with new combinations with
+      ** each reaction in the new iRAF added.
+      */
+      itCombination = combinations.begin ();
+      while (itCombination != combinations.end ())
+      {
+	remove = *itCombination;
+	if (remove.size () < nriRAFs)
+	{
+	  itCombination = combinations.erase (itCombination);
+	  reac = iraf->getReactionFirst ();
+	  while (reac != NULL)
+	  {
+	    remove.push_back (reac);
+	    combinations.push_back (remove);
+	    remove.pop_back ();
+	    reac = iraf->getReactionNext ();
+	  }
+	}
+	else
+	{
+	  itCombination = combinations.end ();
+	}
+      }
+    }
+  }
+  delete sraf;
   
   /*
   ** Return the result.
   */
   return (nriRAFs);
-}
-
-
-/*
-** applyiRAFsAlgo: Recursively find all iRAFs within a RAF.
-**
-** Parameters:
-**   - S: A list of subRAFs seen so far.
-**   - I: A list of iRAFs found so far.
-**   - C: A list of cRAFs found so far.
-**
-** Returns:
-**   - The number of iRAFs found so far.
-*/
-
-int ReacSet::applyiRAFsAlgo (list<ReacSet*>& S, list<ReacSet*>& I)
-{
-  int       rSize;
-  bool      isiRAF, seen;
-  Reaction *reac;
-  ReacSet  *recurse, *subRAF;
-
-  /*
-  ** Remove each reaction in turn and apply the RAF algorithm.
-  */
-  itReaction = reactions.begin ();
-  while (itReaction != reactions.end ())
-  {
-    reac = *itReaction;
-    if (!essential[reac])
-    {
-      /*
-      ** Create a copy of the current reaction set, remove the current reaction,
-      ** and apply the RAF algorithm.
-      */
-      recurse = new ReacSet ();
-      recurse->copy (this);
-      recurse->removeReaction (reac);
-      rSize = recurse->applyRAFalgo ();
-      /*
-      ** Check the result and recurse, if needed.
-      */
-      if (rSize == 0)
-      {
-	/*
-	** Current reaction is essential.
-	*/
-	essential[reac] = true;
-	delete recurse;
-      }
-      else
-      {
-	/*
-	** Check whether the smaller subRAF is closed.
-	*/
-	// To come...
-	/*
-	** Check if the smaller subRAF has already been seen.
-	*/
-	seen = false;
-	itSubRAF = S.begin ();
-	while (itSubRAF != S.end ())
-	{
-	  subRAF = *itSubRAF;
-	  if (recurse->compare (subRAF))
-	  {
-	    seen = true;
-	    break;
-	  }
-	  itSubRAF++;
-	}
-	/*
-	** If not yet seen, save and recurse. Otherwise, delete and ignore.
-	*/
-	if (!seen)
-	{
-	  S.push_back (recurse);
-	  recurse->applyiRAFsAlgo (S, I);
-	}
-	else
-	{
-	  delete recurse;
-	}
-      }
-    }
-    /*
-    ** Get the next reaction.
-    */
-    itReaction++;
-  }
-
-  /*
-  ** Check if all reactions are essential, and save the current iRAF is so.
-  */
-  isiRAF = true;
-  itReaction = reactions.begin ();
-  while (itReaction != reactions.end ())
-  {
-    reac = *itReaction;
-    if (!essential[reac])
-    {
-      isiRAF = false;
-      break;
-    }
-    itReaction++;
-  }
-  if (isiRAF)
-  {
-    I.push_back (this);
-  }
-
-  /*
-  ** Return the number of iRAFs found so far.
-  */
-  return (I.size ());
 }
 
 

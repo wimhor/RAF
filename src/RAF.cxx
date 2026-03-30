@@ -116,6 +116,19 @@ int main (int argc, char **argv)
     {
       rSet->printiRAFs (false);
     }
+    /*
+    ** Find all iRAFs.
+    */
+    rSize = rSet->findiRAFs ();
+    cout << "iRAFs: " << rSize << endl;
+    if (showReac)
+    {
+      rSet->printiRAFs (true);
+    }
+    else if (showID)
+    {
+      rSet->printiRAFs (false);
+    }
   }
   if (samplecRAFs)
   {

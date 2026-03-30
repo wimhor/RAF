@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 29 March 2026
+** Wim Hordijk   Last modified: 30 March 2026
 */
 
 #ifndef _REACSET_H_
@@ -92,7 +92,6 @@ class ReacSet
   */
   int      applyRAFalgo    ();
   int      applyCAFalgo    ();
-  int      applyiRAFsAlgo  (list<ReacSet*>& S, list<ReacSet*>& I);
   ReacSet *randomiRAF      (default_random_engine& dre);
   int      randomcRAF      (default_random_engine& dre);
   void     computeClosureF ();
