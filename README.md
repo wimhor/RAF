@@ -3,11 +3,11 @@
 # RAF
 Code for detecting and analyzing Reflexively Autocatalytic and Food-generated (RAF) sets, and for generating random instances of the Binary Polymer Model.
 
-This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of trials and errors. The current code provides the basic functionality of finding the maxRAF, CAF, and a sample of irreducible RAFs (iRAFs) in a given reaction network. For an introduction to autocatalytic sets, see
+This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of trials and errors. The current code provides the basic functionality of finding the maxRAF, CAF, and random samples of irreducible RAFs (iRAFs) and closed RAFs (cRAFs) in a given reaction network. For an introduction to autocatalytic sets, see
 - W. Hordijk and M. Steel. [Autocatalytic networks at the basis of life's origin and organization](https://www.mdpi.com/2075-1729/8/4/62). _Life_ 8:62, 2018.
 - W. Hordijk. [A history of autocatalytic sets](https://link.springer.com/article/10.1007/s13752-019-00330-w). _Biological Theory_ 14(4):224-246, 2019.
 
-There are two programs, one for computing various RAF sets, and one for generating random instances of the binary polymer model. This code comes without any warranty, but feel free to use it for your own purposes. If you do so, a reference to the [current repo](https://github.com/wimhor/RAF) will be appreciated.
+There are two programs, one for computing the various RAF sets, and one for generating random instances of the binary polymer model. This code comes without any warranty, but feel free to use it for your own purposes. If you do so, a reference to the [current repo](https://github.com/wimhor/RAF) will be appreciated.
 
 ## Compile
 To compile, go into the `src` directory and type
@@ -50,27 +50,28 @@ For the `RAF` program, the following argument is required:
   - `<infile>`: The file from which to read the reaction network.
 
 while these are optional (defaults indicated):
-  - `-maxRAF`:  Compute the maxRAF.
   - `-CAF`:     Compute the CAF.
   - `-iRAF I`:  Generate a sample of size I of irreducible RAFs (only unique ones are saved).
   - `-cRAF C`:  Generate a sample of size C of closed RAFs (only unique ones are saved).
   - `-print P`: What to print: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
   - `-help`:    Print this help message and exit.
 
+Note that the `RAF` program always computes the maxRAF by default.
+
 ## Example
 The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 irreducible RAFs (iRAFs), and 6 closed RAFs (cRAFs). Run the following command to see these results:
 
-    ./RAF example.crs -maxRAF -CAF -iRAF 100 -cRAF 100 -print ID
+    ./RAF example.crs -CAF -iRAF 100 -cRAF 100 -print ID
 
-Note that not all iRAFs or cRAFs may show up each time the program is run, but a sample size of 100 is generally enough to find them all.
+Note that not all iRAFs or cRAFs may show up each time the program is run, due to the random sampling method, but a sample size of 100 should be more than sufficient to find them all.
 
 ## Input format
 See the example input file `example.crs` for the required format for the reaction network. A detailed description will be added here soon(ish).
 
 ## Notes
 - This repo is under continuous development, and improvements and new functionality will hopefully be added over time.
-- For now the `BinPolModel` program uses an implementation of the Zipf distribution (zipf.c) by [Ken Christensen](https://cse.usf.edu/~kchriste/christen.html) to generate power law values. Will look into a built-in C++ alternative at some point.
-- Compiling and running these programs has been tested in a Linux environment, and although only standard C & C++ libraries are used, no guarantees are given that the programs compile or work properly on other systems.
+- For now the `BinPolModel` program uses an implementation of the Zipf distribution (zipf.c) by [Ken Christensen](https://cse.usf.edu/~kchriste/christen.html) to generate power law distributed values. Will look into a built-in C++ alternative at some point.
+- Compiling and running these programs has been tested in a Linux environment, and although only standard C & C++ libraries are used, no guarantees are given that the programs compile and work properly on other systems.
 
 ## Acknowledgements
 This repo was made possible in part by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic).

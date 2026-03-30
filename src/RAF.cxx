@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
 **
-** Wim Hordijk   Last modified: 29 March 2026
+** Wim Hordijk   Last modified: 30 March 2026
 */
 
 #include <iostream>
@@ -19,7 +19,7 @@ int getArguments (int argc, char **argv);
 ** Global variables.
 */
 int    smplSizeI, smplSizeC;
-bool   computeMaxRAF, computeCAF, computeiRAFs, computecRAFs, showID, showReac;
+bool   computeCAF, sampleiRAFs, samplecRAFs, showID, showReac;
 string inputFile;
 
 
@@ -73,23 +73,17 @@ int main (int argc, char **argv)
   ifs.close ();
 
   /*
-  ** Find various RAF sets as requested.
+  ** Find various RAF sets as requested. Always start with the maxRAF.
   */
-  if (computeMaxRAF)
+  rSize = rSet->findMaxRAF ();
+  cout << "maxRAF: " << rSize << endl;
+  if (showReac)
   {
-    /*
-    ** Find the maxRAF.
-    */
-    rSize = rSet->findMaxRAF ();
-    cout << "maxRAF: " << rSize << endl;
-    if (showReac)
-    {
-      rSet->printMaxRAF (true);
-    }
-    else if (showID)
-    {
-      rSet->printMaxRAF (false);
-    }
+    rSet->printMaxRAF (true);
+  }
+  else if (showID)
+  {
+    rSet->printMaxRAF (false);
   }
   if (computeCAF)
   {
@@ -107,17 +101,8 @@ int main (int argc, char **argv)
       rSet->printCAF (false);
     }
   }
-  if (computeiRAFs)
+  if (sampleiRAFs)
   {
-    /*
-    ** Check whether the maxRAF has been computed.
-    */
-    if (!computeMaxRAF)
-    {
-      status = 1;
-      cerr << "Cannot compute iRAFs if maxRAF is not computed." << endl;
-      goto End_of_Routine;
-    }
     /*
     ** Get an iRAF sample.
     */
@@ -132,17 +117,8 @@ int main (int argc, char **argv)
       rSet->printiRAFs (false);
     }
   }
-  if (computecRAFs)
+  if (samplecRAFs)
   {
-    /*
-    ** Check whether the CAF has been computed.
-    */
-    if (!computeCAF)
-    {
-      status = 1;
-      cerr << "Cannot compute cRAFs if CAF is not computed." << endl;
-      goto End_of_Routine;
-    }
     /*
     ** Get a cRAF sample.
     */
@@ -192,10 +168,9 @@ int getArguments (int argc, char **argv)
   /*
   ** Set defaults.
   */
-  computeMaxRAF = false;
   computeCAF = false;
-  computeiRAFs = false;
-  computecRAFs = false;
+  sampleiRAFs = false;
+  samplecRAFs = false;
   showID = false;
   showReac = false;
   inputFile.assign ("");
@@ -216,16 +191,15 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-maxRAF] [-CAF] [-iRAF I] [-cRAF C] [-print {none|ID|reac}] [-help]"
+	 << " <inFile> [-CAF] [-iRAF I] [-cRAF C] [-print {none|ID|reac}] [-help]"
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
-	 << "  -maxRAF:  Compute the maxRAF." << endl
 	 << "  -CAF:     Compute the CAF." << endl
-	 << "  -iRAF I:  Generate a sample of iRAFs of size I (only unique ones are saved)."
+	 << "  -iRAF I:  Generate a sample of size I of iRAFs (only unique ones are saved)."
 	 << endl
-	 << "  -cRAF C:  Generate a sample of iRAFs of size C (only unique ones are saved)."
+	 << "  -cRAF C:  Generate a sample of size C of cRAFs (only unique ones are saved)."
 	 << endl
-	 << "  -print P: What to print: 'none' = no reactions (default), 'ID' = reaction"
+	 << "  -print P: What to print: 'none' = nothing (default), 'ID' = reaction"
 	 << endl
 	 << "            IDs only, 'reac' = full reactions." << endl
 	 << "  -help:    Print this help message and exit." << endl;
@@ -235,12 +209,7 @@ int getArguments (int argc, char **argv)
   i = 2;
   while (i < argc)
   {
-    if (strcmp (argv[i], "-maxRAF") == 0)
-    {
-      computeMaxRAF = true;
-      i++;
-    }
-    else if (strcmp (argv[i], "-CAF") == 0)
+    if (strcmp (argv[i], "-CAF") == 0)
     {
       computeCAF = true;
       i++;
@@ -260,7 +229,7 @@ int getArguments (int argc, char **argv)
 	cerr << "Invalid value for iRAF sample size: " << argv[i] << endl;
 	goto End_of_Routine;
       }
-      computeiRAFs = true;
+      sampleiRAFs = true;
       i++;
     }
     else if (strcmp (argv[i], "-cRAF") == 0)
@@ -278,7 +247,7 @@ int getArguments (int argc, char **argv)
 	cerr << "Invalid value for cRAF sample size: " << argv[i] << endl;
 	goto End_of_Routine;
       }
-      computecRAFs = true;
+      samplecRAFs = true;
       i++;
     }
     else if (strcmp (argv[i], "-print") == 0)
