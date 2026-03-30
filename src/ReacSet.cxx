@@ -1673,6 +1673,10 @@ void ReacSet::printCAF (bool full)
 /*
 ** findiRAFs: Find all iRAFs within the maxRAF.
 **
+** Note: This works OK for maxRAFs of at most 50 reactions or so (if even that). Then it
+**       quickly becomes a combinatorial mess. Left this in here just in case, but do not
+**       recommend using it...
+**
 ** Returns:
 **   The number of iRAFS found.
 */
@@ -1717,6 +1721,9 @@ int ReacSet::findiRAFs ()
     combinations.push_back (remove);
     reac = iraf->getReactionNext ();
   }
+  //cout << "==> iRAFs:" << endl;
+  //cout << iraf->getNrReactions () << ":";
+  //iraf->printReacSet (false);
 
   /*
   ** While not all iRAFs are found yet, keep searching for new ones.
@@ -1725,6 +1732,7 @@ int ReacSet::findiRAFs ()
   sraf = new ReacSet ();
   while (!allFound)
   {
+    //cout << "trying " << combinations.size () << " combinations..." << endl;
     itCombination = combinations.begin ();
     while (itCombination != combinations.end ())
     {
@@ -1787,9 +1795,14 @@ int ReacSet::findiRAFs ()
       iraf = sraf->randomiRAF (dre);
       iRAFs.push_back (iraf);
       nriRAFs++;
+      //cout << iraf->getNrReactions () << ":";
+      //iraf->printReacSet (false);
       /*
       ** For each existing combination, replace it with new combinations with
-      ** each reaction in the new iRAF added.
+      ** each reaction in the new iRAF added. This is used so combinations resulting
+      ** in an empty maxRAF can be deleted and not considered any further. But this
+      ** requires a lot of memory. Probably better to just generate the combinations
+      ** "on the fly"...
       */
       itCombination = combinations.begin ();
       while (itCombination != combinations.end ())

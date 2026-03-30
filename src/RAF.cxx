@@ -85,6 +85,7 @@ int main (int argc, char **argv)
   {
     rSet->printMaxRAF (false);
   }
+  cout << endl;
   if (computeCAF)
   {
     /*
@@ -100,6 +101,7 @@ int main (int argc, char **argv)
     {
       rSet->printCAF (false);
     }
+    cout << endl;
   }
   if (sampleiRAFs)
   {
@@ -116,19 +118,7 @@ int main (int argc, char **argv)
     {
       rSet->printiRAFs (false);
     }
-    /*
-    ** Find all iRAFs.
-    */
-    rSize = rSet->findiRAFs ();
-    cout << "iRAFs: " << rSize << endl;
-    if (showReac)
-    {
-      rSet->printiRAFs (true);
-    }
-    else if (showID)
-    {
-      rSet->printiRAFs (false);
-    }
+    cout << endl;
   }
   if (samplecRAFs)
   {
@@ -145,6 +135,7 @@ int main (int argc, char **argv)
     {
       rSet->printcRAFs (false);
     }
+    cout << endl;
   }
   
  End_of_Routine:
