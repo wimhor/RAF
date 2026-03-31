@@ -2079,7 +2079,7 @@ int ReacSet::samplecRAFs (int sampleSize)
 
 int ReacSet::randomcRAF (default_random_engine& dre)
 {
-  int                          rSize, nrcRAFs;
+  int                          i, rSize, nrcRAFs, reacIndex;
   bool                         seen;
   Reaction                    *reac, *reacRemove;
   ReacSet                     *sraf, *craf;
@@ -2107,12 +2107,18 @@ int ReacSet::randomcRAF (default_random_engine& dre)
   ** For each next reaction in the shuffled list, remove it and apply the RAF algorithm.
   */
   nrcRAFs = 0;
-  while (sraf->getNrReactions () > 0)
+  reacIndex = 0;
+  while (reacIndex < shuffledReacs.size ())
   {
     /*
     ** Remove the next reaction in the set.
     */
     itShufReac = shuffledReacs.begin ();
+    for (i = 0; i < reacIndex; i++)
+    {
+      itShufReac++;
+    }
+    reac = *itShufReac;
     reacRemove = *itShufReac;
     sraf->removeReaction (reacRemove);
     /*
@@ -2165,6 +2171,25 @@ int ReacSet::randomcRAF (default_random_engine& dre)
 	  nrcRAFs++;
 	}
       }
+    }
+    else
+    {
+      /*
+      ** Empty RAF: Restore the RAF reactions and increase the index of
+      **            the reaction to be removed next. This is somewhat more
+      **            complicated than needed, to keep the reaction order the same.
+      */
+      reac = maxRAF->getReactionFirst ();
+      while (reac != NULL)
+      {
+	itShufReac = find (shuffledReacs.begin (), shuffledReacs.end (), reac);
+	if (itShufReac != shuffledReacs.end ())
+	{
+	  sraf->addReaction (reac);
+	}
+	reac = maxRAF->getReactionNext ();
+      }
+      reacIndex++;
     }
   }
 
