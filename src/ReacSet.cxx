@@ -1673,9 +1673,9 @@ void ReacSet::printCAF (bool full)
 /*
 ** findiRAFs: Find all iRAFs within the maxRAF.
 **
-** Note: This works OK for maxRAFs of at most 50 reactions or so (if even that). Then it
-**       quickly becomes a combinatorial mess. Left this in here just in case, but do not
-**       recommend using it...
+** Note: This quickly becomes a combinatorial nightmare, even for more than just a
+**       handful of iRAFs. Leaving this code in here just in case, but don't recommend
+**       using it.
 **
 ** Returns:
 **   The number of iRAFS found.
@@ -1683,16 +1683,14 @@ void ReacSet::printCAF (bool full)
 
 int ReacSet::findiRAFs ()
 {
-  int                             nriRAFs, rSize;
-  bool                            allFound;
-  Reaction                       *reac;
-  ReacSet                        *sraf, *iraf;
-  list<Reaction*>                 remove;
-  list<list<Reaction*>>           combinations;
-  list<Reaction*>::iterator       itRemove;
-  list<list<Reaction*>>::iterator itCombination;
-  list<ReacSet*>::iterator        itRSet;
-  default_random_engine           dre(time(NULL));
+  int                        nriRAFs, rSize, i, nrCombinations;
+  bool                       allFound;
+  Reaction                  *reac, *tmpReac;
+  ReacSet                   *sraf, *iraf;
+  list<Reaction*>            remove;
+  list<Reaction*>::iterator  itRemove;
+  list<ReacSet*>::iterator   itRSet;
+  default_random_engine      dre(time(NULL));
 
   /*
   ** Clear the list of iRAFs.
@@ -1707,23 +1705,15 @@ int ReacSet::findiRAFs ()
   iRAFs.clear ();
 
   /*
-  ** Find a random iRAF and create the list of reaction combinations for removal.
+  ** Find a random iRAF.
   */
   iraf = randomiRAF (dre);
   iRAFs.push_back (iraf);
   nriRAFs = 1;
-  combinations.clear ();
-  reac = iraf->getReactionFirst ();
-  while (reac != NULL)
-  {
-    remove.clear ();
-    remove.push_back (reac);
-    combinations.push_back (remove);
-    reac = iraf->getReactionNext ();
-  }
-  //cout << "==> iRAFs:" << endl;
-  //cout << iraf->getNrReactions () << ":";
-  //iraf->printReacSet (false);
+  nrCombinations = iraf->getNrReactions ();
+  cout << "==> iRAFs:" << endl;
+  cout << iraf->getNrReactions () << ":";
+  iraf->printReacSet (false);
 
   /*
   ** While not all iRAFs are found yet, keep searching for new ones.
@@ -1732,16 +1722,33 @@ int ReacSet::findiRAFs ()
   sraf = new ReacSet ();
   while (!allFound)
   {
-    //cout << "trying " << combinations.size () << " combinations..." << endl;
-    itCombination = combinations.begin ();
-    while (itCombination != combinations.end ())
+    cout << "trying " << nrCombinations << " combinations...";
+    cout.flush ();
+    /*
+    ** Set the reactions to remove combination to the first reaction in each iRAF
+    ** found so far.
+    */
+    remove.clear ();
+    itSubRAF = iRAFs.begin ();
+    while (itSubRAF != iRAFs.end ())
+    {
+      iraf = *itSubRAF;
+      reac = iraf->getReactionFirst ();
+      remove.push_back (reac);
+      itSubRAF++;
+    }
+    /*
+    ** Try reaction removal combinations until a new iRAF is found or all combinations
+    ** have been tried.
+    */
+    i = 1;
+    while (i <= nrCombinations)
     {
       /*
       ** Remove the current combination of reactions from the maxRAF and find the
       ** remaining maxRAF.
       */
       sraf->copy (maxRAF);
-      remove = *itCombination;
       itRemove = remove.begin ();
       while (itRemove != remove.end ())
       {
@@ -1756,75 +1763,56 @@ int ReacSet::findiRAFs ()
       if (rSize == 0)
       {
 	/*
-	** Remove the current combination.
+	** Get the next combination of reactions to remove.
 	*/
-	itCombination = combinations.erase (itCombination);
+	itSubRAF = iRAFs.begin ();
+	itRemove = remove.begin ();
+	while (itSubRAF != iRAFs.end ())
+	{
+	  iraf = *itSubRAF;
+	  reac = *itRemove;
+	  tmpReac = iraf->getReactionFirst ();
+	  while (tmpReac != reac)
+	  {
+	    tmpReac = iraf->getReactionNext ();
+	  }
+	  tmpReac = iraf->getReactionNext ();
+	  if (tmpReac != NULL)
+	  {
+	    *itRemove = tmpReac;
+	    break;
+	  }
+	  else
+	  {
+	    tmpReac = iraf->getReactionFirst ();
+	    *itRemove = tmpReac;
+	    itRemove++;
+	    itSubRAF++;
+	  }
+	}
+	i++;
       }
       else
       {
 	/*
-	** Get the next combination.
+	** Find a new iRAF and quit the current loop.
 	*/
-	itCombination++;
+	iraf = sraf->randomiRAF (dre);
+	iRAFs.push_back (iraf);
+	nriRAFs++;
+	nrCombinations *= iraf->getNrReactions ();
+	cout << " (" << i << ")" << endl;
+	cout << "  " << iraf->getNrReactions () << ":";
+	iraf->printReacSet (false);
+        break;
       }
     }
     /*
-    ** If the number of combinations left is zero, all iRAFs are found. If not,
-    ** find a next one and create new combinations for removal.
+    ** If all combinations have been tried, all iRAFs are found.
     */
-    if (combinations.size () == 0)
+    if (i > nrCombinations)
     {
       allFound = true;
-    }
-    else
-    {
-      /*
-      ** Remove the first combination of reactions from the maxRAF and find a new iRAF.
-      */
-      sraf->copy (maxRAF);
-      itCombination = combinations.begin ();
-      remove = *itCombination;
-      itRemove = remove.begin ();
-      while (itRemove != remove.end ())
-      {
-	reac = *itRemove;
-	sraf->removeReaction (reac);
-	itRemove++;
-      }
-      rSize = sraf->findMaxRAF ();
-      iraf = sraf->randomiRAF (dre);
-      iRAFs.push_back (iraf);
-      nriRAFs++;
-      //cout << iraf->getNrReactions () << ":";
-      //iraf->printReacSet (false);
-      /*
-      ** For each existing combination, replace it with new combinations with
-      ** each reaction in the new iRAF added. This is used so combinations resulting
-      ** in an empty maxRAF can be deleted and not considered any further. But this
-      ** requires a lot of memory. Probably better to just generate the combinations
-      ** "on the fly"...
-      */
-      itCombination = combinations.begin ();
-      while (itCombination != combinations.end ())
-      {
-	remove = *itCombination;
-	if (remove.size () < nriRAFs)
-	{
-	  itCombination = combinations.erase (itCombination);
-	  reac = iraf->getReactionFirst ();
-	  while (reac != NULL)
-	  {
-	    remove.push_back (reac);
-	    combinations.push_back (remove);
-	    remove.pop_back ();
-	    reac = iraf->getReactionNext ();
-	  }
-	}
-	else
-	{
-	  itCombination = combinations.end ();
-	}
-      }
     }
   }
   delete sraf;
