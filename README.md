@@ -59,9 +59,9 @@ while these are optional (defaults indicated):
 Note that the `RAF` program always computes the maxRAF by default.
 
 ## Example
-The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 irreducible RAFs (iRAFs), and 6 closed RAFs (cRAFs). Run the following command to see these results:
+The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crn`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 irreducible RAFs (iRAFs), and 6 closed RAFs (cRAFs). Run the following command to see these results:
 
-    ./RAF example.crs -CAF -iRAF 100 -cRAF 100 -print ID
+    ./RAF example.crn -CAF -iRAF 100 -cRAF 100 -print ID
 
 Note that not all iRAFs or cRAFs may show up each time the program is run, due to the random sampling method, but a sample size of 100 should be more than sufficient to find them all.
 

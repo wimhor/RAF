@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 26 March 2026
+** Wim Hordijk   Last modified: 03 April 2026
 */
 
 #include <stdlib.h>
@@ -108,7 +108,7 @@ int main (int argc, char **argv)
       powerlawCatalysis ();
     }
     generateFileName (fName, i, l);
-    ofs.open (fName + ".crs");
+    ofs.open (fName + ".crn");
     writeToFile (ofs);
     ofs.close ();
   }
