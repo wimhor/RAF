@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 30 March 2026
+** Wim Hordijk   Last modified: 7 April 2026
 */
 
 #include <string.h>
@@ -1674,8 +1674,7 @@ void ReacSet::printCAF (bool full)
 ** findiRAFs: Find all iRAFs within the maxRAF.
 **
 ** Note: This quickly becomes a combinatorial nightmare, even for more than just a
-**       handful of iRAFs. Leaving this code in here just in case, but don't recommend
-**       using it.
+**       handful of iRAFs. iRAFs are printed out as they are found.
 **
 ** Returns:
 **   The number of iRAFS found.
@@ -1683,7 +1682,8 @@ void ReacSet::printCAF (bool full)
 
 int ReacSet::findiRAFs ()
 {
-  int                        nriRAFs, rSize, i, nrCombinations;
+  int                        nriRAFs, rSize, i;
+  long int                   nrCombinations;
   bool                       allFound;
   Reaction                  *reac, *tmpReac;
   ReacSet                   *sraf, *iraf;
@@ -1711,8 +1711,8 @@ int ReacSet::findiRAFs ()
   iRAFs.push_back (iraf);
   nriRAFs = 1;
   nrCombinations = iraf->getNrReactions ();
-  cout << "==> iRAFs:" << endl;
-  cout << iraf->getNrReactions () << ":";
+  cout << "iRAFs:" << endl;
+  cout << "  " << iraf->getNrReactions () << ":";
   iraf->printReacSet (false);
 
   /*
@@ -1813,6 +1813,7 @@ int ReacSet::findiRAFs ()
     if (i > nrCombinations)
     {
       allFound = true;
+      cout << " (done)" << endl << endl;
     }
   }
   delete sraf;

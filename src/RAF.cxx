@@ -1,7 +1,7 @@
 /*
-** RAF.cxx: Find the maxRAF and the CAF in a given reaction network.
+** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 30 March 2026
+** Wim Hordijk   Last modified: 7 April 2026
 */
 
 #include <iostream>
@@ -86,11 +86,11 @@ int main (int argc, char **argv)
     rSet->printMaxRAF (false);
   }
   cout << endl;
+  /*
+  ** Find the CAF, if requested.
+  */
   if (computeCAF)
   {
-    /*
-    ** Find the CAF.
-    */
     rSize = rSet->findCAF ();
     cout << "CAF: " << rSize << endl;
     if (showReac)
@@ -103,39 +103,65 @@ int main (int argc, char **argv)
     }
     cout << endl;
   }
+  /*
+  ** Find iRAFs, if requested.
+  */
   if (sampleiRAFs)
   {
-    /*
-    ** Get an iRAF sample.
-    */
-    rSize = rSet->sampleiRAFs (smplSizeI);
-    cout << "iRAFs: " << rSize << endl;
-    if (showReac)
+    if (smplSizeI > 0)
     {
-      rSet->printiRAFs (true);
+      /*
+      ** Get a random iRAF sample.
+      */
+      rSize = rSet->sampleiRAFs (smplSizeI);
+      cout << "iRAFs: " << rSize << endl;
+      if (showReac)
+      {
+	rSet->printiRAFs (true);
+      }
+      else if (showID)
+      {
+	rSet->printiRAFs (false);
+      }
+      cout << endl;
     }
-    else if (showID)
+    else
     {
-      rSet->printiRAFs (false);
+      /*
+      ** Find all iRAFs.
+      */
+      rSet->findiRAFs ();
     }
-    cout << endl;
   }
+  /*
+  ** Find cRAFs, if requested.
+  */
   if (samplecRAFs)
   {
-    /*
-    ** Get a cRAF sample.
-    */
-    rSize = rSet->samplecRAFs (smplSizeC);
-    cout << "cRAFs: " << rSize << endl;
-    if (showReac)
+    if (smplSizeC > 0)
     {
-      rSet->printcRAFs (true);
+      /*
+      ** Get a random cRAF sample.
+      */
+      rSize = rSet->samplecRAFs (smplSizeC);
+      cout << "cRAFs: " << rSize << endl;
+      if (showReac)
+      {
+	rSet->printcRAFs (true);
+      }
+      else if (showID)
+      {
+	rSet->printcRAFs (false);
+      }
+      cout << endl;
     }
-    else if (showID)
+    else
     {
-      rSet->printcRAFs (false);
+      /*
+      ** Write the maxRAF in pyCOT format to calculate its organizations.
+      */
+      // To come...
     }
-    cout << endl;
   }
   
  End_of_Routine:
@@ -178,8 +204,8 @@ int getArguments (int argc, char **argv)
   showID = false;
   showReac = false;
   inputFile.assign ("");
-  smplSizeI = 10;
-  smplSizeC = 10;
+  smplSizeI = 100;
+  smplSizeC = 100;
   
   /*
   ** Get and check all arguments.
@@ -199,9 +225,13 @@ int getArguments (int argc, char **argv)
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -CAF:     Compute the CAF." << endl
-	 << "  -iRAF I:  Generate a sample of size I of iRAFs (only unique ones are saved)."
+	 << "  -iRAF I:  Generate a random sample of size I of iRAFs (only unique ones "
 	 << endl
-	 << "  -cRAF C:  Generate a sample of size C of cRAFs (only unique ones are saved)."
+	 << "            are shown). If I=0, find all iRAFs (this may take very long!)."
+	 << endl
+	 << "  -cRAF C:  Generate a random sample of size C of cRAFs (only unique ones "
+	 << endl
+	 << "            are shown)."
 	 << endl
 	 << "  -print P: What to print: 'none' = nothing (default), 'ID' = reaction"
 	 << endl
@@ -227,7 +257,7 @@ int getArguments (int argc, char **argv)
 	cerr << "Missing value for argument '-iRAF'." << endl;
 	goto End_of_Routine;
       }
-      if ((sscanf (argv[i], "%d", &smplSizeI) != 1) || (smplSizeI < 1))
+      if ((sscanf (argv[i], "%d", &smplSizeI) != 1) || (smplSizeI < 0))
       {
 	status = -1;
 	cerr << "Invalid value for iRAF sample size: " << argv[i] << endl;

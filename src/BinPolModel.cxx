@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 03 April 2026
+** Wim Hordijk   Last modified: 7 April 2026
 */
 
 #include <stdlib.h>
@@ -33,7 +33,6 @@ void uniformCatalysis  ();
 void powerlawCatalysis ();
 int  indexToString     (int index, string& s);
 int  stringToIndex     (string& s);
-void generateFileName  (string& s, int i, int len);
 void writeToFile       (ofstream& os);
 
 /*
@@ -60,7 +59,7 @@ list<int> *catalysts;
 
 int main (int argc, char **argv)
 {
-  int      status, i, l;
+  int      status, i;
   string   fName;
   ofstream ofs;
 
@@ -96,7 +95,6 @@ int main (int argc, char **argv)
   /*
   ** Generate random instances of the binary polymer model and write them to file.
   */
-  l = (int)rint (floor (log10 (nrInstances))) + 1;
   for (i = 1; i <= nrInstances; i++)
   {
     if (catMethod == UNIFCAT)
@@ -107,7 +105,7 @@ int main (int argc, char **argv)
     {
       powerlawCatalysis ();
     }
-    generateFileName (fName, i, l);
+    fName.assign ("bpm" + to_string (i));
     ofs.open (fName + ".crn");
     writeToFile (ofs);
     ofs.close ();
@@ -540,29 +538,6 @@ int stringToIndex (string& s)
   ** Return the index.
   */
   return (index);
-}
-
-
-/*
-** generateFileName: Generate a file name with enough leading zeros.
-**
-** Parameters:
-**   - s:   A string to put the result in.
-**   - i:   The current file number.
-**   - len: The required length for the number (i.e., including leading zeros).
-*/
-
-void generateFileName (string& s, int i, int len)
-{
-  int d, k;
-
-  s.assign ("bpm");
-  d = (int)rint (floor (log10 (i))) + 1;
-  for (k = d; k < len; k++)
-  {
-    s.append ("0");
-  }
-  s.append (to_string (i));
 }
 
 
