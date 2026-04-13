@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 7 April 2026
+** Wim Hordijk   Last modified: 13 April 2026
 */
 
 #include <string.h>
@@ -1237,6 +1237,12 @@ int ReacSet::readFromFile (ifstream& is)
   itMolecule = molecules.begin ();
   itFoodSet = foodSet.begin ();
   itReaction = reactions.begin ();
+
+  /*
+  ** Copy the list of molecules to the closure (for the purpose of printing
+  ** a reaction set where only catalysts in the closure are printed).
+  */
+  closure = molecules;
   
   /*
   ** Return the status.
@@ -1258,6 +1264,9 @@ void ReacSet::printReaction (Reaction *reac)
 
   reac->getID (&s);
   cout << s << ": ";
+  /*
+  ** Print the reactants.
+  */
   mol = reac->getReactantFirst ();
   if (mol != NULL)
   {
@@ -1290,6 +1299,9 @@ void ReacSet::printReaction (Reaction *reac)
   {
     cout << "<=> ";
   }
+  /*
+  ** Print the products.
+  */
   mol = reac->getProductFirst ();
   if (mol != NULL)
   {
@@ -1314,21 +1326,37 @@ void ReacSet::printReaction (Reaction *reac)
       mol = reac->getProductNext ();
     }
   }
+  /*
+  ** Print the catalysts, but only the ones that are in the closure.
+  */
   if (reac->getNrCatalysts () > 0)
   {
-    cout << "(";
+    n = 0;
     mol = reac->getCatalystFirst ();
-    mol->getSequence (s);
-    cout << s;
-    mol = reac->getCatalystNext ();
     while (mol != NULL)
     {
-      mol->getSequence (s);
-      cout << " " << s;
+      if (isInClosureF (mol))
+      {
+	if (n == 0)
+	{
+	  cout << "(";
+	}
+	else
+	{
+	  cout << " ";
+	}
+	mol->getSequence (s);
+	cout << s;
+	n++;
+      }
       mol = reac->getCatalystNext ();
     }
-    cout << ")" << endl;
+    if (n > 0)
+    {
+      cout << ")";
+    }
   }
+  cout << endl;
 }
 
 
@@ -1990,8 +2018,10 @@ ReacSet *ReacSet::randomiRAF (default_random_engine& dre)
   }
 
   /*
-  ** Return the result.
+  ** Compute the closure of the food set one more time (otherwise it will be empty)
+  ** and return the result.
   */
+  sraf->computeClosureF ();
   return (sraf);
 }
 
