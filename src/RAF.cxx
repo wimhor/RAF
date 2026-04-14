@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 7 April 2026
+** Wim Hordijk   Last modified: 14 April 2026
 */
 
 #include <iostream>
@@ -40,7 +40,6 @@ int main (int argc, char **argv)
   int       status, rSize;
   char      fileName[256];
   ifstream  ifs;
-  ofstream  ofs;
   ReacSet  *rSet;
 
   status = 0;
@@ -160,7 +159,7 @@ int main (int argc, char **argv)
       /*
       ** Write the maxRAF in pyCOT format to calculate its organizations.
       */
-      // To come...
+      rSet->maxRAF2pyCOT ();
     }
   }
   
@@ -229,10 +228,11 @@ int getArguments (int argc, char **argv)
 	 << endl
 	 << "            are shown). If I=0, find all iRAFs (this may take very long!)."
 	 << endl
-	 << "  -cRAF C:  Generate a random sample of size C of cRAFs (only unique ones "
+	 << "  -cRAF C:  Generate a random sample of size C of cRAFs (only unique ones"
 	 << endl
-	 << "            are shown)."
+	 << "            are shown). If C=0, write the maxRAF to file in pyCOT"
 	 << endl
+	 << "            format to compute all organizations." << endl
 	 << "  -print P: What to print: 'none' = nothing (default), 'ID' = reaction"
 	 << endl
 	 << "            IDs only, 'reac' = full reactions." << endl
@@ -275,7 +275,7 @@ int getArguments (int argc, char **argv)
 	cerr << "Missing value for argument '-cRAF'." << endl;
 	goto End_of_Routine;
       }
-      if ((sscanf (argv[i], "%d", &smplSizeC) != 1) || (smplSizeC < 1))
+      if ((sscanf (argv[i], "%d", &smplSizeC) != 1) || (smplSizeC < 0))
       {
 	status = -1;
 	cerr << "Invalid value for cRAF sample size: " << argv[i] << endl;

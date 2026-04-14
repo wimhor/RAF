@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 30 March 2026
+** Wim Hordijk   Last modified: 14 April 2026
 */
 
 #ifndef _REACSET_H_
@@ -72,6 +72,7 @@ class ReacSet
   void      printiRAFs         (bool full);
   void      printcRAFs         (bool full);
   void      copy               (ReacSet *orig);
+  void      maxRAF2pyCOT       ();
   
  private:
   /*

@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 13 April 2026
+** Wim Hordijk   Last modified: 14 April 2026
 */
 
 #include <string.h>
@@ -2367,6 +2367,213 @@ void ReacSet::copy (ReacSet *source)
   itMolecule = molecules.begin ();
   itFoodSet = foodSet.begin ();
   itReaction = reactions.begin ();
+}
+
+
+/*
+** maxRAF2pyCOT: Write the maxRAF in pyCOT format to compute its organizations.
+*/
+
+void ReacSet::maxRAF2pyCOT ()
+{
+  int       i, n;
+  ofstream  ofs;
+  string    s;
+  Molecule *cat, *mol;
+  Reaction *reac;
+
+  /*
+  ** Open the file for writing.
+  */
+  ofs.open ("pyCOT.crn");
+  if (!ofs.is_open ())
+  {
+    cerr << "Could not open output file 'pyCOT.crn'." << endl;
+    goto End_of_Routine;
+  }
+  
+  /*
+  ** Go through all reactions in the maxRAF.
+  */
+  reac = maxRAF->getReactionFirst ();
+  while (reac != NULL)
+  {
+    /*
+    ** For each catalyst that is in the closure, write the reaction.
+    */
+    cat = reac->getCatalystFirst ();
+    while (cat != NULL)
+    {
+      if (maxRAF->isInClosureF (cat))
+      {
+	reac->getID (&s);
+	ofs << s << ": ";
+	/*
+	** Write the reactants and add the catalyst.
+	*/
+	mol = reac->getReactantFirst ();
+	if (mol != NULL)
+	{
+	  n = reac->getReacStoich (mol);
+	  if (n > 1)
+	  {
+	    ofs << n << " ";
+	  }
+	  mol->getSequence (s);
+	  ofs <<  "m" << s << " ";
+	  mol = reac->getReactantNext ();
+	  while (mol != NULL)
+	  {
+	    ofs << "+ ";
+	    n = reac->getReacStoich (mol);
+	    if (n > 1)
+	    {
+	      ofs << n << " ";
+	    }
+	    mol->getSequence (s);
+	    ofs << "m" << s << " ";
+	    mol = reac->getReactantNext ();
+	  }
+	}
+	cat->getSequence (s);
+	ofs << "+ m" << s << " => ";
+	/*
+	** Write the products and add the catalyst.
+	*/
+	mol = reac->getProductFirst ();
+	if (mol != NULL)
+	{
+	  n = reac->getProdStoich (mol);
+	  if (n > 1)
+	  {
+	    ofs << n << " ";
+	  }
+	  mol->getSequence (s);
+	  ofs << "m" << s << " ";
+	  mol = reac->getProductNext ();
+	  while (mol != NULL)
+	  {
+	    ofs << "+ ";
+	    n = reac->getProdStoich (mol);
+	    if (n > 1)
+	    {
+	      ofs << n << " ";
+	    }
+	    mol->getSequence (s);
+	    ofs << "m" << s << " ";
+	    mol = reac->getProductNext ();
+	  }
+	}
+	cat->getSequence (s);
+	ofs << "+ m" << s << ";" << endl;
+	/*
+	** If the reaction is bi-directional, write the reverse direction too.
+	*/
+	if (reac->getDirection () == BI_DIR)
+	{
+	  reac->getID (&s);
+	  ofs << s << "b: ";
+	  /*
+	  ** Write the products and add the catalyst.
+	  */
+	  mol = reac->getProductFirst ();
+	  if (mol != NULL)
+	  {
+	    n = reac->getProdStoich (mol);
+	    if (n > 1)
+	    {
+	      ofs << n << " ";
+	    }
+	    mol->getSequence (s);
+	    ofs << "m" << s << " ";
+	    mol = reac->getProductNext ();
+	    while (mol != NULL)
+	    {
+	      ofs << "+ ";
+	      n = reac->getProdStoich (mol);
+	      if (n > 1)
+	      {
+		ofs << n << " ";
+	      }
+	      mol->getSequence (s);
+	      ofs << "m" << s << " ";
+	      mol = reac->getProductNext ();
+	    }
+	  }
+	  cat->getSequence (s);
+	  ofs << "+ m" << s << " => ";
+	  /*
+	  ** Write the reactants and add the catalyst.
+	  */
+	  mol = reac->getReactantFirst ();
+	  if (mol != NULL)
+	  {
+	    n = reac->getReacStoich (mol);
+	    if (n > 1)
+	    {
+	      ofs << n << " ";
+	    }
+	    mol->getSequence (s);
+	    ofs << "m" << s << " ";
+	    mol = reac->getReactantNext ();
+	    while (mol != NULL)
+	    {
+	      ofs << "+ ";
+	      n = reac->getReacStoich (mol);
+	      if (n > 1)
+	      {
+		ofs << n << " ";
+	      }
+	      mol->getSequence (s);
+	      ofs << "m" << s << " ";
+	      mol = reac->getReactantNext ();
+	    }
+	  }
+	  cat->getSequence (s);
+	  ofs << "+ m" << s << ";" << endl;
+	}
+      }
+      cat = reac->getCatalystNext ();
+    }
+    reac = maxRAF->getReactionNext ();
+  }
+  /*
+  ** Write inflow reactions for the food molecules.
+  */
+  i = 1;
+  itFoodSet = foodSet.begin ();
+  while (itFoodSet != foodSet.end ())
+  {
+    mol = *itFoodSet;
+    mol->getSequence (s);
+    ofs << "r_in" << i << ": => m" << s << ";" << endl;
+    itFoodSet++;
+    i++;
+  }
+  /*
+  ** Write outflow reactions for all molecules in the closure.
+  */
+  i = 1;
+  itMolecule = molecules.begin ();
+  while (itMolecule != molecules.end ())
+  {
+    mol = *itMolecule;
+    if (maxRAF->isInClosureF (mol))
+    {
+      mol->getSequence (s);
+      ofs << "r_out" << i <<": m" << s << " =>;" << endl;
+      i++;
+    }
+    itMolecule++;
+  }
+  
+  /*
+  ** Close the file.
+  */
+  ofs.close ();
+
+ End_of_Routine:
+  ;
 }
 
 
