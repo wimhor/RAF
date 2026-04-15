@@ -2276,6 +2276,24 @@ bool ReacSet::isClosed (ReacSet *rset)
 	}
 	mol = reac->getReactantNext ();
       }
+      /*
+      ** If the reaction is bi-directional, check the reverse direction if still
+      ** necessary.
+      */
+      if (!applied && reac->getDirection () == BI_DIR)
+      {
+	applied = true;
+	mol = reac->getProductFirst ();
+	while (mol != NULL)
+	{
+	  if (!rset->isInClosureF (mol))
+	  {
+	    applied = false;
+	    break;
+	  }
+	  mol = reac->getProductNext ();
+	}
+      }
       if (applied)
       {
 	/*
@@ -2362,6 +2380,7 @@ void ReacSet::copy (ReacSet *source)
   molecules = source->molecules;
   foodSet = source->foodSet;
   reactions = source->reactions;
+  closure = source->closure;
   molMap = source->molMap;
   essential = source->essential;
   itMolecule = molecules.begin ();
