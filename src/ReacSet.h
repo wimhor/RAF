@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 14 April 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #ifndef _REACSET_H_

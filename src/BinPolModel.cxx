@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 7 April 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #include <stdlib.h>
@@ -48,13 +48,13 @@ list<int> *catalysts;
 /*
 ** main: The main routine of the program.
 **
-** Parameters:
-**   - argc: The number of arguments to the program.
+** Arguments:
+**   - argc: The number of arguments to the BinPolModel program.
 **   - argv: A list with the arguments.
 **
 ** Returns:
-**   - If everything went fine: 0.
-**   - Otherwise:               1.
+**   If everything went fine: 0.
+**   Otherwise:               1.
 */
 
 int main (int argc, char **argv)
@@ -122,13 +122,13 @@ int main (int argc, char **argv)
 /*
 ** getArguments: Get and parse the command line arguments.
 **
-** Parameters:
-**   argc: The number of arguments.
-**   argv: A list with the arguments.
+** Arguments:
+**   - argc: The number of arguments.
+**   - argv: A list with the arguments.
 **
 ** Returns:
-**   - If everything went fine:  0.
-**   - Otherwise:               -1.
+**   If everything went fine:  0.
+**   Otherwise:               -1.
 */
 
 int getArguments (int argc, char **argv)
@@ -437,11 +437,11 @@ void powerlawCatalysis ()
 
 
 /*
-** indexToString: Convert an index to the corresponding binary string.
+** indexToString: Convert an index to its corresponding binary string.
 **
-** Parameters:
+** Arguments:
 **   - index: The index to convert (a non-negative integer).
-**   - s:     A pointer to a string to put the result in.
+**   - s:     A string to put the result in.
 **
 ** Returns:
 **   The length of the converted string.
@@ -490,7 +490,7 @@ int indexToString (int index, string& s)
 /*
 ** stringToIndex: Get the corresponding index of a binary string.
 **
-** Parameters:
+** Arguments:
 **   - s: A binary string.
 **
 ** Returns:
@@ -544,7 +544,7 @@ int stringToIndex (string& s)
 /*
 ** writeToFile: Write the reaction set to an output file stream.
 **
-** Parameters:
+** Arguments:
 **   - os: The output file stream to write to.
 */
 

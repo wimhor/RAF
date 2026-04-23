@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 14 April 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #include <string.h>
@@ -68,7 +68,7 @@ ReacSet::~ReacSet ()
 ** getNrMolecules: Get the number of molecules in the reaction set.
 **
 ** Returns:
-**   - The number of molecules in the reaction set.
+**   The number of molecules in the reaction set.
 */
 
 int ReacSet::getNrMolecules ()
@@ -84,8 +84,8 @@ int ReacSet::getNrMolecules ()
 ** getMoleculeFirst: Get the first element from the molecule list.
 **
 ** Returns:
-**   - A pointer to the first element in the molecule list (NULL if the
-**     molecule list is empty).
+**   A pointer to the first element in the molecule list (NULL if the
+**   molecule list is empty).
 */
 
 Molecule *ReacSet::getMoleculeFirst ()
@@ -117,8 +117,8 @@ Molecule *ReacSet::getMoleculeFirst ()
 **                  that the list has not been changed since the previous call.
 **
 ** Returns:
-**   - A pointer to the next element in the molecule list (NULL if end of list
-       is reached).
+**   A pointer to the next element in the molecule list (NULL if end of list
+     is reached).
 */
 
 Molecule *ReacSet::getMoleculeNext ()
@@ -148,12 +148,12 @@ Molecule *ReacSet::getMoleculeNext ()
 /*
 ** getMoleculeBySeq: Get an element from the molecule list by its sequence string.
 **
-** Parameters:
+** Arguments:
 **   - seq: The molecule sequence (a string).
 **
 ** Returns:
-**   - A pointer to the element in the molecule list with the given
-**     sequence (NULL if nonexistent).
+**   A pointer to the element in the molecule list with the given
+**   sequence (NULL if nonexistent).
 */
 
 Molecule *ReacSet::getMoleculeBySeq (string seq)
@@ -185,7 +185,7 @@ Molecule *ReacSet::getMoleculeBySeq (string seq)
 ** addMolecule: Add an element to the molecule list. If a molecule with the
 **              same sequence already exists, no new element is added.
 **
-** Parameters:
+** Arguments:
 **   - mol: A pointer to the element to add.
 */
 
@@ -211,7 +211,7 @@ void ReacSet::addMolecule (Molecule *mol)
 /*
 ** removeMolecule: Remove an element from the molecule list.
 **
-** Parameters:
+** Arguments:
 **   - mol: A pointer to the element to remove.
 */
 
@@ -247,7 +247,7 @@ void ReacSet::clearMolecules ()
 ** getNrFoodMolecules: Get the number of molecules in the food set.
 **
 ** Returns:
-**   - The number of molecules in the food set.
+**   The number of molecules in the food set.
 */
 
 int ReacSet::getNrFoodMolecules ()
@@ -263,7 +263,7 @@ int ReacSet::getNrFoodMolecules ()
 ** getFoodSetFirst: Get the first molecule in the food set.
 **
 ** Returns:
-**   - A pointer to the first molecule in the food set (NULL if list is empty).
+**   A pointer to the first molecule in the food set (NULL if list is empty).
 */
 
 Molecule *ReacSet::getFoodSetFirst ()
@@ -294,7 +294,7 @@ Molecule *ReacSet::getFoodSetFirst ()
 ** getFoodSetNext: Get the next molecule in the food set.
 **
 ** Returns:
-**   - A pointer to the next molecule in the food set (NULL if end of list).
+**   A pointer to the next molecule in the food set (NULL if end of list).
 */
 
 Molecule *ReacSet::getFoodSetNext ()
@@ -324,12 +324,12 @@ Molecule *ReacSet::getFoodSetNext ()
 /*
 ** isInFoodSet: Check whether a molecule is in the food set.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to check for.
 **
 ** Returns:
-**   - If the molecule is in the food set: true.
-**   - Otherwise:                          false.
+**   If the molecule is in the food set: true.
+**   Otherwise:                          false.
 */
 
 bool ReacSet::isInFoodSet (Molecule *mol)
@@ -360,7 +360,7 @@ bool ReacSet::isInFoodSet (Molecule *mol)
 /*
 ** addToFoodSet: Add a molecule to the food set if it does not already exist.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to add.
 */
 
@@ -380,7 +380,7 @@ void ReacSet::addToFoodSet (Molecule *mol)
 /*
 ** removeFromFoodSet: Remove a molecule from the food set.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to remove.
 */
 
@@ -411,7 +411,7 @@ void ReacSet::clearFoodSet ()
 ** getNrReactions: Get the number of reactions in the reaction set.
 **
 ** Returns:
-**   - The number of reactions in the reaction set.
+**   The number of reactions in the reaction set.
 */
 
 int ReacSet::getNrReactions ()
@@ -427,7 +427,7 @@ int ReacSet::getNrReactions ()
 ** getReactionFirst: Get the first reaction in the list.
 **
 ** Returns:
-**   - A pointer to the first reaction in the list (NULL if list is empty).
+**   A pointer to the first reaction in the list (NULL if list is empty).
 */
 
 Reaction *ReacSet::getReactionFirst ()
@@ -458,7 +458,7 @@ Reaction *ReacSet::getReactionFirst ()
 ** getReactionNext: Get the next reaction in the list.
 **
 ** Returns:
-**   - A pointer to the next reaction in the list (NULL if end of list).
+**   A pointer to the next reaction in the list (NULL if end of list).
 */
 
 Reaction *ReacSet::getReactionNext ()
@@ -488,12 +488,12 @@ Reaction *ReacSet::getReactionNext ()
 /*
 ** isInReacSet: Check whether a reaction is in the reaction set.
 **
-** Parameters:
+** Arguments:
 **   - reac: The reaction to check for.
 **
 ** Returns:
-**   - If the reaction is in the reaction set: true.
-**   - Otherwise:                              false.
+**   If the reaction is in the reaction set: true.
+**   Otherwise:                              false.
 */
 
 bool ReacSet::isInReacSet (Reaction *reac)
@@ -528,12 +528,12 @@ bool ReacSet::isInReacSet (Reaction *reac)
 **       applied to subsets of the same original reaction set. Different instantiations
 **       of the same reaction set will have different pointers to the same reactions!
 **
-** Parameters:
+** Arguments:
 **   - rset: The reaction set to compare with.
 **
 ** Returns:
-**   - If the two sets are the same: true.
-**   - Otherwise:                    false.
+**   If the two sets are the same: true.
+**   Otherwise:                    false.
 */
 
 bool ReacSet::compare (ReacSet *rset)
@@ -577,7 +577,7 @@ bool ReacSet::compare (ReacSet *rset)
 /*
 ** addReaction: Add a reaction to the list if it does not alreayd exist.
 **
-** Parameters:
+** Arguments:
 **   - reac: The reaction to add.
 */
 
@@ -598,7 +598,7 @@ void ReacSet::addReaction (Reaction *reac)
 /*
 ** removeReaction: Remove a reaction from the list.
 **
-** Parameters:
+** Arguments:
 **   - reac: The reaction to remove.
 */
 
@@ -727,7 +727,7 @@ int ReacSet::applyRAFalgo ()
 ** findMaxRAF: Find the maximal RAF set in the current reaction set.
 **
 ** Returns:
-**   - The size of the maximal RAF set (zero if empty).
+**   The size of the maximal RAF set (zero if empty).
 */
 
 int ReacSet::findMaxRAF ()
@@ -755,7 +755,7 @@ int ReacSet::findMaxRAF ()
 ** getMaxRAFFirst: Get the first reaction in the maxRAF set.
 **
 ** Returns:
-**   - A pointer to the first reaction in the maxRAF (NULL if it is empty).
+**   A pointer to the first reaction in the maxRAF (NULL if it is empty).
 */
 
 Reaction *ReacSet::getMaxRAFFirst ()
@@ -785,7 +785,7 @@ Reaction *ReacSet::getMaxRAFFirst ()
 ** getMaxRAFNext: Get the next reaction in the maxRAF set.
 **
 ** Returns:
-**   - A pointer to the next reaction in the maxRAF (NULL if end of list).
+**   A pointer to the next reaction in the maxRAF (NULL if end of list).
 */
 
 Reaction *ReacSet::getMaxRAFNext ()
@@ -814,12 +814,12 @@ Reaction *ReacSet::getMaxRAFNext ()
 /*
 ** isInMaxRAF: Check whether a reaction is in the maxRAF.
 **
-** Parameters:
+** Arguments:
 **   - reac: The reaction to check for.
 **
 ** Returns:
-**   - If the reaction is in the maxRAF: true.
-**   - Otherwise:                        false.
+**   If the reaction is in the maxRAF: true.
+**   Otherwise:                        false.
 */
 
 bool ReacSet::isInMaxRAF (Reaction *reac)
@@ -842,12 +842,12 @@ bool ReacSet::isInMaxRAF (Reaction *reac)
 /*
 ** isInClosureF: Check whether a molecule is in the current closure of the food set.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to check for.
 **
 ** Returns:
-**   - If the molecule is in the closure: true.
-**   - Otherwise:                         false.
+**   If the molecule is in the closure: true.
+**   Otherwise:                         false.
 */
 
 bool ReacSet::isInClosureF (Molecule *mol)
@@ -1023,12 +1023,12 @@ void ReacSet::computeClosureF ()
 ** Note: This function uses old-fashioned C character strings, as it allows for using
 **       the 'strtok' function which is quite useful here.
 **
-** Parameters:
+** Arguments:
 **   - ifs: The input file stream to read from.
 **
 ** Returns:
-**   - If reaction set could be read successfully:  0.
-**   - Otherwise:                                  -1.
+**   If reaction set could be read successfully:  0.
+**   Otherwise:                                  -1.
 */
 
 int ReacSet::readFromFile (ifstream& is)
@@ -1363,9 +1363,9 @@ void ReacSet::printReaction (Reaction *reac)
 /*
 ** printReacSet: Print the current reaction set.
 **
-** Parameters:
-**   full: Boolean indicating whether to print the full reaction ('true') or
-**         only the reaction IDs ('false').
+** Arguments:
+**   - full: Boolean indicating whether to print the full reaction ('true') or
+**           only the reaction IDs ('false').
 */
 
 void ReacSet::printReacSet (bool full)
@@ -1406,9 +1406,9 @@ void ReacSet::printReacSet (bool full)
 /*
 ** printMaxRAF: Print the maxRAF reaction set.
 **
-** Parameters:
-**   full: Boolean indicating whether to print the full reaction ('true') or
-**         only the reaction IDs ('false').
+** Arguments:
+**   - full: Boolean indicating whether to print the full reaction ('true') or
+**           only the reaction IDs ('false').
 */
 
 void ReacSet::printMaxRAF (bool full)
@@ -1437,7 +1437,7 @@ int ReacSet::getNrRAFMolecules ()
 ** findCAF: Find the CAF in the current reaction set.
 **
 ** Returns:
-**   - The size of the CAF set (zero if empty).
+**   The size of the CAF set (zero if empty).
 */
 
 int ReacSet::findCAF ()
@@ -1469,7 +1469,7 @@ int ReacSet::findCAF ()
 ** applyCAFalgo: Apply the CAF algorithm to the current reaction set.
 **
 ** Returns:
-**   - The size of the resulting CAF set.
+**   The size of the resulting CAF set.
 */
 
 int ReacSet::applyCAFalgo ()
@@ -1684,9 +1684,9 @@ int ReacSet::applyCAFalgo ()
 /*
 ** printCAF: Print the CAF reaction set.
 **
-** Parameters:
-**   full: Boolean indicating whether to print the full reaction ('true') or
-**         only the reaction IDs ('false').
+** Arguments:
+**   - full: Boolean indicating whether to print the full reaction ('true') or
+**           only the reaction IDs ('false').
 */
 
 void ReacSet::printCAF (bool full)
@@ -2029,8 +2029,8 @@ ReacSet *ReacSet::randomiRAF (default_random_engine& dre)
 /*
 ** printiRAFs: Print the iRAF reaction sets.
 **
-** Parameters:
-**   full: Print full reactions ('true') or only reaction IDs ('false').
+** Arguments:
+**   - full: Print full reactions ('true') or only reaction IDs ('false').
 */
 
 void ReacSet::printiRAFs (bool full)
@@ -2239,12 +2239,12 @@ int ReacSet::randomcRAF (default_random_engine& dre)
 /*
 ** isClosed: Check whether a given reaction set is closed within the maxRAF.
 **
-** Parameters:
+** Arguments:
 **   - rset: The reaction set to check for closure.
 **
 ** Returns:
-**   - If the given reaction set is closed: true.
-**   - Otherwise:                           false.
+**   If the given reaction set is closed: true.
+**   Otherwise:                           false.
 */
 
 bool ReacSet::isClosed (ReacSet *rset)
@@ -2333,8 +2333,8 @@ bool ReacSet::isClosed (ReacSet *rset)
 /*
 ** printcRAFs: Print the cRAF reaction sets.
 **
-** Parameters:
-**   full: Print full reactions ('true') or only reaction IDs ('false').
+** Arguments:
+**   - full: Print full reactions ('true') or only reaction IDs ('false').
 */
 
 void ReacSet::printcRAFs (bool full)
@@ -2362,7 +2362,7 @@ void ReacSet::printcRAFs (bool full)
 /*
 ** copy: Copy the reaction network of another ReacSet object into the current one.
 **
-** Parameters:
+** Arguments:
 **   - source: A pointer to another ReacSet object.
 */
 
@@ -2420,13 +2420,15 @@ void ReacSet::maxRAF2pyCOT ()
     /*
     ** For each catalyst that is in the closure, write the reaction.
     */
+    i = 0;
     cat = reac->getCatalystFirst ();
     while (cat != NULL)
     {
       if (maxRAF->isInClosureF (cat))
       {
+	i++;
 	reac->getID (&s);
-	ofs << s << ": ";
+	ofs << s << "_" << i << ": ";
 	/*
 	** Write the reactants and add the catalyst.
 	*/
@@ -2491,7 +2493,7 @@ void ReacSet::maxRAF2pyCOT ()
 	if (reac->getDirection () == BI_DIR)
 	{
 	  reac->getID (&s);
-	  ofs << s << "b: ";
+	  ofs << s << "_" << i << "b: ";
 	  /*
 	  ** Write the products and add the catalyst.
 	  */

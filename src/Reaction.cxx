@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 23 March 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #include "Reaction.h"
@@ -10,7 +10,7 @@
 /*
 ** Reaction: The constructor.
 **
-** Parameters:
+** Arguments:
 **   - id:  The reaction ID (can be any string).
 */
 
@@ -49,7 +49,7 @@ Reaction::~Reaction ()
 /*
 ** getID: Get the reaction ID.
 **
-** Parameters:
+** Arguments:
 **   - id: A pointer to a string to hold (a copy of) the reaction ID.
 */
 
@@ -66,7 +66,7 @@ void Reaction::getID (string *id)
 ** getNrReactants: Get the number of reactants in the reaction.
 **
 ** Returns:
-**   - The number of reactants.
+**   The number of reactants.
 */
 int Reaction::getNrReactants ()
 {
@@ -81,7 +81,7 @@ int Reaction::getNrReactants ()
 ** getReactantFirst: Get the first reactant in the list.
 **
 ** Returns:
-**   - A pointer to the first reactant in the list (NULL if list is empty).
+**   A pointer to the first reactant in the list (NULL if list is empty).
 */
 
 Molecule *Reaction::getReactantFirst ()
@@ -112,7 +112,7 @@ Molecule *Reaction::getReactantFirst ()
 ** getReactantNext: Get the next reactant in the list.
 **
 ** Returns:
-**   - A pointer to the next reactant in the list (NULL if end of list).
+**   A pointer to the next reactant in the list (NULL if end of list).
 */
 
 Molecule *Reaction::getReactantNext ()
@@ -142,12 +142,12 @@ Molecule *Reaction::getReactantNext ()
 /*
 ** hasReactant: Check if the reaction has a given molecule as a reactant.
 **
-** Parameters:
+** Arguments:
 **   - mol: A molecule type.
 **
 ** Returns:
-**   - If the molecule is a reactant: true.
-**   - Otherwise:                     false.
+**   If the molecule is a reactant: true.
+**   Otherwise:                     false.
 */
 
 bool Reaction::hasReactant (Molecule *mol)
@@ -177,12 +177,12 @@ bool Reaction::hasReactant (Molecule *mol)
 /*
 ** getReacStoich: Get the stoichiometry of a reactant.
 **
-** Parameters:
+** Arguments:
 **   - mol: A molecule type.
 **
 ** Returns:
-**   - If the molecule is a reactant: Its stoichiometry.
-**   - Otherwise:                     0.
+**   If the molecule is a reactant: Its stoichiometry.
+**   Otherwise:                     0.
 */
 
 int Reaction::getReacStoich (Molecule *mol)
@@ -213,7 +213,7 @@ int Reaction::getReacStoich (Molecule *mol)
 ** addReactant: Add a reactant to the list of reactants. If the reactant already
 **              exists, increase its stoichiometry.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to add.
 **   - n:   The stoichiometry of the reactant (default = 1).
 */
@@ -241,7 +241,7 @@ void Reaction::addReactant (Molecule *mol, int n)
 /*
 ** removeReactant: Remove a reactant from the list.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to remove.
 */
 
@@ -284,7 +284,7 @@ void Reaction::clearReactants ()
 ** getNrProducts: Get the number of products in the reaction.
 **
 ** Returns:
-**   - The number of products.
+**   The number of products.
 */
 int Reaction::getNrProducts ()
 {
@@ -299,7 +299,7 @@ int Reaction::getNrProducts ()
 ** getProductFirst: Get the first product in the list.
 **
 ** Returns:
-**   - A pointer to the first product in the list (NULL if list is empty).
+**   A pointer to the first product in the list (NULL if list is empty).
 */
 
 Molecule *Reaction::getProductFirst ()
@@ -330,7 +330,7 @@ Molecule *Reaction::getProductFirst ()
 ** getProductNext: Get the next product in the list.
 **
 ** Returns:
-**   - A pointer to the next product in the list (NULL if end of list).
+**   A pointer to the next product in the list (NULL if end of list).
 */
 
 Molecule *Reaction::getProductNext ()
@@ -360,12 +360,12 @@ Molecule *Reaction::getProductNext ()
 /*
 ** hasProduct: Check if the reaction has a given molecule as a product.
 **
-** Parameters:
+** Arguments:
 **   - mol: A molecule type.
 **
 ** Returns:
-**   - If the molecule is a product: true.
-**   - Otherwise:                    false.
+**   If the molecule is a product: true.
+**   Otherwise:                    false.
 */
 
 bool Reaction::hasProduct (Molecule *mol)
@@ -395,12 +395,12 @@ bool Reaction::hasProduct (Molecule *mol)
 /*
 ** getProdStoich: Get the stoichiometry of a product.
 **
-** Parameters:
+** Arguments:
 **   - mol: A molecule type.
 **
 ** Returns:
-**   - If the molecule is a product: Its stoichiometry.
-**   - Otherwise:                    0.
+**   If the molecule is a product: Its stoichiometry.
+**   Otherwise:                    0.
 */
 
 int Reaction::getProdStoich (Molecule *mol)
@@ -431,7 +431,7 @@ int Reaction::getProdStoich (Molecule *mol)
 ** addProduct: Add a product to the list. If the product already exists, increase
 **             its stoichiometry.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to add.
 **   - n:   The stoichiometry of the product (default = 1).
 */
@@ -459,7 +459,7 @@ void Reaction::addProduct (Molecule *mol, int n)
 /*
 ** removeProduct: Remove a product from the list.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to remove.
 */
 
@@ -502,7 +502,7 @@ void Reaction::clearProducts ()
 ** getNrCatalysts: Get the number of catalysts in the reaction.
 **
 ** Returns:
-**   - The number of catalysts.
+**   The number of catalysts.
 */
 int Reaction::getNrCatalysts ()
 {
@@ -517,7 +517,7 @@ int Reaction::getNrCatalysts ()
 ** getCatalystFirst: Get the first catalyst in the list.
 **
 ** Returns:
-**   - A pointer to the first catalyst in the list (NULL if list is empty).
+**   A pointer to the first catalyst in the list (NULL if list is empty).
 */
 
 Molecule *Reaction::getCatalystFirst ()
@@ -548,7 +548,7 @@ Molecule *Reaction::getCatalystFirst ()
 ** getCatalystNext: Get the next catalyst in the list.
 **
 ** Returns:
-**   - A pointer to the next catalyst in the list (NULL if end of list).
+**   A pointer to the next catalyst in the list (NULL if end of list).
 */
 
 Molecule *Reaction::getCatalystNext ()
@@ -578,12 +578,12 @@ Molecule *Reaction::getCatalystNext ()
 /*
 ** hasCatalyst: Check if the reaction has a given molecule as a catalyst.
 **
-** Parameters:
+** Arguments:
 **   - mol: A molecule type.
 **
 ** Returns:
-**   - If the molecule is a catalyst: true.
-**   - Otherwise:                     false.
+**   If the molecule is a catalyst: true.
+**   Otherwise:                     false.
 */
 
 bool Reaction::hasCatalyst (Molecule *mol)
@@ -613,7 +613,7 @@ bool Reaction::hasCatalyst (Molecule *mol)
 /*
 ** addCatalyst: Add a catalyst to the list if it does not already exist.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to add.
 */
 
@@ -634,7 +634,7 @@ void Reaction::addCatalyst (Molecule *mol)
 /*
 ** removeCatalyst: Remove a catalyst from the list.
 **
-** Parameters:
+** Arguments:
 **   - mol: The molecule to remove.
 */
 
@@ -674,7 +674,7 @@ void Reaction::clearCatalysts ()
 /*
 ** setDirection: Set the reaction direction.
 **
-** Parameters:
+** Arguments:
 **   - dir: The direction to set (either UNI_DIR or BI_DIR).
 */
 
@@ -691,7 +691,7 @@ void Reaction::setDirection (int dir)
 ** getDirection: Get the reaction direction.
 **
 ** Returns:
-**   - Either UNI_DIR or BI_DIR.
+**   Either UNI_DIR or BI_DIR.
 */
 
 int Reaction::getDirection ()

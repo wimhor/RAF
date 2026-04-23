@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 14 April 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #include <iostream>
@@ -26,13 +26,13 @@ string inputFile;
 /*
 ** main: The main routine of the program.
 **
-** Parameters:
-**   - argc: The number of arguments to the program.
+** Arguments:
+**   - argc: The number of arguments to the RAF program.
 **   - argv: A list with the arguments.
 **
 ** Returns:
-**   - If everything went fine: 0.
-**   - Otherwise:               1.
+**   If everything went fine: 0.
+**   Otherwise:               1.
 */
 
 int main (int argc, char **argv)
@@ -157,7 +157,7 @@ int main (int argc, char **argv)
     else
     {
       /*
-      ** Write the maxRAF in pyCOT format to calculate its organizations.
+      ** Write the maxRAF in pyCOT format to compute its organizations.
       */
       rSet->maxRAF2pyCOT ();
     }
@@ -165,7 +165,7 @@ int main (int argc, char **argv)
   
  End_of_Routine:
   /*
-  ** Close the input file, if necessary.
+  ** Close the input file.
   */
   ifs.close ();
   /*
@@ -179,12 +179,12 @@ int main (int argc, char **argv)
 ** getArguments: Get and parse the command line arguments.
 **
 ** Parameters:
-**   argc: The number of arguments.
-**   argv: A list with the arguments.
+**   - argc: The number of arguments to the RAF program.
+**   - argv: A list with the arguments.
 **
 ** Returns:
-**   - If everything went fine:  0.
-**   - Otherwise:               -1.
+**   If everything went fine:  0.
+**   Otherwise:               -1.
 */
 
 int getArguments (int argc, char **argv)
@@ -230,9 +230,9 @@ int getArguments (int argc, char **argv)
 	 << endl
 	 << "  -cRAF C:  Generate a random sample of size C of cRAFs (only unique ones"
 	 << endl
-	 << "            are shown). If C=0, write the maxRAF to file in pyCOT"
+	 << "            are shown). If C=0, write the maxRAF to a file 'pyCOT.crn' to"
 	 << endl
-	 << "            format to compute all organizations." << endl
+	 << "            compute all organizations with pyCOT." << endl
 	 << "  -print P: What to print: 'none' = nothing (default), 'ID' = reaction"
 	 << endl
 	 << "            IDs only, 'reac' = full reactions." << endl

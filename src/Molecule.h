@@ -1,7 +1,7 @@
 /*
 ** Molecule.h: Definition of a molecule type.
 **
-** Wim Hordijk   Last modified: 22 March 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #ifndef _MOLECULE_H_

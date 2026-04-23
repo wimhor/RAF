@@ -1,7 +1,7 @@
 /*
 ** Molecule.cxx: Molecule class.
 **
-** Wim Hordijk   Last modified: 12 March 2026
+** Wim Hordijk   Last modified: 23 April 2026
 */
 
 #include "Molecule.h"
@@ -11,7 +11,7 @@
 /*
 ** Molecule: The constructor.
 **
-** Parameters:
+** Arguments:
 **   - seq: The molecule "sequence" (can be any string).
 */
 
@@ -50,7 +50,7 @@ Molecule::~Molecule ()
 /*
 ** getSequence: Get the molecule sequence.
 **
-** Parameters:
+** Arguments:
 **   - seq: A string to hold (a copy of) the molecule sequence.
 */
 
@@ -67,7 +67,7 @@ void Molecule::getSequence (string& seq)
 ** getSeqLength: Get the length of the molecule sequence.
 **
 ** Returns:
-**   - The length of the molecule sequence.
+**   The length of the molecule sequence.
 */
 
 int Molecule::getSeqLength ()
@@ -82,7 +82,7 @@ int Molecule::getSeqLength ()
 /*
 ** addAsReactant: Add a reaction for which the molecule is a reactant.
 **
-** Parameters:
+** Arguments:
 **   - reac: A pointer to the reaction to add.
 */
 
@@ -102,7 +102,7 @@ void Molecule::addAsReactant (Reaction *reac)
 /*
 ** removeAsReactant: Remove a reaction for which the molecule is a reactant.
 **
-** Parameters:
+** Arguments:
 **   - reac: A pointer to the reaction to remove.
 */
 
@@ -118,7 +118,7 @@ void Molecule::removeAsReactant (Reaction *reac)
 /*
 ** addAsProduct: Add a reaction for which the molecule is a product.
 **
-** Parameters:
+** Arguments:
 **   - reac: A pointer to the reaction to add.
 */
 
@@ -138,7 +138,7 @@ void Molecule::addAsProduct (Reaction *reac)
 /*
 ** removeAsProduct: Remove a reaction for which the molecule is a product.
 **
-** Parameters:
+** Arguments:
 **   - reac: A pointer to the reaction to remove.
 */
 
@@ -154,7 +154,7 @@ void Molecule::removeAsProduct (Reaction *reac)
 /*
 ** addAsCatalyst: Add a reaction for which the molecule is a catalyst.
 **
-** Parameters:
+** Arguments:
 **   - reac: A pointer to the reaction to add.
 */
 
@@ -174,7 +174,7 @@ void Molecule::addAsCatalyst (Reaction *reac)
 /*
 ** removeAsCatalyst: Remove a reaction for which the molecule is a catalyst.
 **
-** Parameters:
+** Arguments:
 **   - reac: A pointer to the reaction to remove.
 */
 
@@ -192,7 +192,7 @@ void Molecule::removeAsCatalyst (Reaction *reac)
 **                  a reactant.
 **
 ** Returns:
-**   - The number of reaction for which this molecule is a reactant.
+**   The number of reaction for which this molecule is a reactant.
 */
 
 int Molecule::getNrAsReactant ()
@@ -209,7 +209,7 @@ int Molecule::getNrAsReactant ()
 **                 a product.
 **
 ** Returns:
-**   - The number of reaction for which this molecule is a product.
+**   The number of reaction for which this molecule is a product.
 */
 
 int Molecule::getNrAsProduct ()
@@ -226,7 +226,7 @@ int Molecule::getNrAsProduct ()
 **                  a catalyst.
 **
 ** Returns:
-**   - The number of reaction for which this molecule is a catalyst.
+**   The number of reaction for which this molecule is a catalyst.
 */
 
 int Molecule::getNrAsCatalyst ()
@@ -243,7 +243,7 @@ int Molecule::getNrAsCatalyst ()
 **                     reactant.
 **
 ** Returns:
-**   - A pointer to the first reaction (or NULL if out of bounds).
+**   A pointer to the first reaction (or NULL if out of bounds).
 */
 
 Reaction *Molecule::getAsReactantFirst ()
@@ -275,7 +275,7 @@ Reaction *Molecule::getAsReactantFirst ()
 **                    reactant.
 **
 ** Returns:
-**   - A pointer to the next reaction (or NULL if out of bounds).
+**   A pointer to the next reaction (or NULL if out of bounds).
 */
 
 Reaction *Molecule::getAsReactantNext ()
@@ -307,7 +307,7 @@ Reaction *Molecule::getAsReactantNext ()
 **                    product.
 **
 ** Returns:
-**   - A pointer to the first reaction (or NULL if out of bounds).
+**   A pointer to the first reaction (or NULL if out of bounds).
 */
 
 Reaction *Molecule::getAsProductFirst ()
@@ -339,7 +339,7 @@ Reaction *Molecule::getAsProductFirst ()
 **                   product.
 **
 ** Returns:
-**   - A pointer to the next reaction (or NULL if out of bounds).
+**   A pointer to the next reaction (or NULL if out of bounds).
 */
 
 Reaction *Molecule::getAsProductNext ()
@@ -371,7 +371,7 @@ Reaction *Molecule::getAsProductNext ()
 **                     catalyst.
 **
 ** Returns:
-**   - A pointer to the first reaction (or NULL if out of bounds).
+**   A pointer to the first reaction (or NULL if out of bounds).
 */
 
 Reaction *Molecule::getAsCatalystFirst ()
@@ -403,7 +403,7 @@ Reaction *Molecule::getAsCatalystFirst ()
 **                    catalyst.
 **
 ** Returns:
-**   - A pointer to the first reaction (or NULL if out of bounds).
+**   A pointer to the first reaction (or NULL if out of bounds).
 */
 
 Reaction *Molecule::getAsCatalystNext ()
