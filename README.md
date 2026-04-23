@@ -56,7 +56,7 @@ while these are optional (defaults indicated):
   - `-print P`: What to print: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
   - `-help`:    Print this help message and exit.
 
-Note that the `RAF` program always computes the maxRAF by default. If `cRAF 0` is included as an argument, the maxRAF is written to a file 'pyCOT.crn' that can be used as an input file to the [pyCOT](https://github.com/tveloz/pyCOT) program to compute all organizations within the maxRAF.
+Note that the `RAF` program always computes the maxRAF by default. If `-cRAF 0` is included as an argument, the maxRAF is written to a file 'pyCOT.crn' that can be used as an input file to the [pyCOT](https://github.com/tveloz/pyCOT) program to compute all organizations within the maxRAF.
 
 ## Example
 The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crn`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 iRAFs, and 6 cRAFs. Run the following command to see these results:
