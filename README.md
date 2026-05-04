@@ -6,6 +6,7 @@ Code for detecting and analyzing Reflexively Autocatalytic and Food-generated (R
 This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of hacks and trials & errors. The current code provides the basic functionality of finding the maxRAF, maxCAF, and irreducible RAFs (iRAFs) and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
 - W. Hordijk and M. Steel. [Autocatalytic networks at the basis of life's origin and organization](https://www.mdpi.com/2075-1729/8/4/62). _Life_ 8:62, 2018.
 - W. Hordijk. [A history of autocatalytic sets](https://link.springer.com/article/10.1007/s13752-019-00330-w). _Biological Theory_ 14(4):224-246, 2019.
+
 For a formal presentation of the algorithms implemented in this code, see
 - W. Hordijk. [Algorithms for enumerating irreducible and closed autocatalytic sets](https://www.preprints.org/manuscript/202604.1787). _Preprints_ 202604.1787, 2026.
 
