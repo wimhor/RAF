@@ -3,18 +3,20 @@
 # RAF
 Code for detecting and analyzing Reflexively Autocatalytic and Food-generated (RAF) sets, and for generating random instances of the Binary Polymer Model.
 
-This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of trials and errors. The current code provides the basic functionality of finding the maxRAF, CAF, and random samples of irreducible RAFs (iRAFs) and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
+This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of hacks and trials & errors. The current code provides the basic functionality of finding the maxRAF, maxCAF, and irreducible RAFs (iRAFs) and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
 - W. Hordijk and M. Steel. [Autocatalytic networks at the basis of life's origin and organization](https://www.mdpi.com/2075-1729/8/4/62). _Life_ 8:62, 2018.
 - W. Hordijk. [A history of autocatalytic sets](https://link.springer.com/article/10.1007/s13752-019-00330-w). _Biological Theory_ 14(4):224-246, 2019.
+For a formal presentation of the algorithms implemented in this code, see
+- W. Hordijk. [Algorithms for enumerating irreducible and closed autocatalytic sets](https://www.preprints.org/manuscript/202604.1787). _Preprints_ 202604.1787, 2026.
 
-There are two programs, one for generating random instances of the binary polymer model, and one for computing various RAF sets. This code comes without any warranty, but feel free to use it for your own purposes. If you do so, a reference to the [current repo](https://github.com/wimhor/RAF) will be appreciated.
+There are two programs, one for generating random instances of the binary polymer model, and one for computing the various RAF sets. This code comes without any warranty, but feel free to use it for your own purposes. If you do so, a reference to the [current repo](https://github.com/wimhor/RAF) will be appreciated.
 
 ## Compile
 To compile, go into the `src` directory and type
 
     make BPM
 
-to compile the `BinPolModel` program or
+to compile the `BinPolModel` program, or
 
     make RAF
 
@@ -32,7 +34,7 @@ or
 to see the list of required and optional program arguments.
 
 ## Arguments
-Both programs require at least a certain number of arguments, while others are optional.
+Both programs require at least one or more arguments, while several others are optional.
 
 For the `BinPolModel` program, the following arguments are required:
   - `n`: The maximum polymer length (`n > 1`).
@@ -41,16 +43,16 @@ For the `BinPolModel` program, the following arguments are required:
   
 while these are optional (defaults indicated):
   - `-c C`:  The catalysis assignment method `C`: `unif` for uniform (default) or `plaw` for power law (the value of `p` will be used for the power law parameter).
-  - `-i I`:  The number of instances `I` to generate (`I > 0`, default = 1).
+  - `-i I`:  The number of instances `I` to generate (`I > 0`; default = 1).
   - `-f`:    Do not allow food molecules to be catalysts.
-  - `-s S`:  The random seed `S` (`S >= 0`, default = 0: use current time).
+  - `-s S`:  The random seed `S` (`S >= 0`; default = 0: use current time).
   - `-help`: Print this help message and exit.
 
 For the `RAF` program, the following argument is required:
   - `<infile>`: The file from which to read the reaction network.
 
-while these are optional (defaults indicated):
-  - `-CAF`:     Compute the CAF.
+while these are optional:
+  - `-CAF`:     Compute the maxCAF.
   - `-iRAF I`:  Generate a random sample of size `I` of irreducible RAFs (iRAFs; only unique ones are shown). If `I=0`, find all iRAFs (this may take very long!).
   - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crs' to compute all organizations with pyCOT.
   - `-print P`: What to print: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
