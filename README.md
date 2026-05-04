@@ -52,16 +52,16 @@ For the `RAF` program, the following argument is required:
 while these are optional (defaults indicated):
   - `-CAF`:     Compute the CAF.
   - `-iRAF I`:  Generate a random sample of size `I` of irreducible RAFs (iRAFs; only unique ones are shown). If `I=0`, find all iRAFs (this may take very long!).
-  - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crn' to compute all organizations with pyCOT.
+  - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crs' to compute all organizations with pyCOT.
   - `-print P`: What to print: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
   - `-help`:    Print this help message and exit.
 
 Note that the `RAF` program always computes the maxRAF by default. If `-cRAF 0` is included as an argument, the maxRAF is written to a file 'pyCOT.crn' that can be used as an input file to the [pyCOT](https://github.com/tveloz/pyCOT) program to compute all organizations within the maxRAF.
 
 ## Example
-The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crn`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 iRAFs, and 6 cRAFs. Run the following command to see these results:
+The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 iRAFs, and 6 cRAFs. Run the following command to see these results:
 
-    ./RAF example.crn -CAF -iRAF 100 -cRAF 100 -print ID
+    ./RAF example.crs -CAF -iRAF 100 -cRAF 100 -print ID
 
 Note that not all iRAFs or cRAFs may show up each time the program is run, depending on the sample size, due to the random sampling method.
 

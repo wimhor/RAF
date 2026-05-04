@@ -2404,7 +2404,7 @@ void ReacSet::maxRAF2pyCOT ()
   /*
   ** Open the file for writing.
   */
-  ofs.open ("pyCOT.crn");
+  ofs.open ("pyCOT.crs");
   if (!ofs.is_open ())
   {
     cerr << "Could not open output file 'pyCOT.crn'." << endl;

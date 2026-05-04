@@ -106,7 +106,7 @@ int main (int argc, char **argv)
       powerlawCatalysis ();
     }
     fName.assign ("bpm" + to_string (i));
-    ofs.open (fName + ".crn");
+    ofs.open (fName + ".crs");
     writeToFile (ofs);
     ofs.close ();
   }
