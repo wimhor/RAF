@@ -45,7 +45,8 @@ For the `BinPolModel` program, the following arguments are required:
 while these are optional (defaults indicated):
   - `-c C`:  The catalysis assignment method `C`: `unif` for uniform (default) or `plaw` for power law (the value of `p` will be used for the power law parameter).
   - `-i I`:  The number of instances `I` to generate (`I > 0`; default = 1).
-  - `-f`:    Do not allow food molecules to be catalysts.
+  - `-x`:    Exclude food molecules from being catalysts.
+  - `-f`:    Use only forward (ligation) reactions.
   - `-s S`:  The random seed `S` (`S >= 0`; default = 0: use current time).
   - `-help`: Print this help message and exit.
 

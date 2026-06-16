@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 23 April 2026
+** Wim Hordijk   Last modified: 16 June 2026
 */
 
 #include <stdlib.h>
@@ -40,7 +40,7 @@ void writeToFile       (ofstream& os);
 */
 int        n, t, nrMolecules, nrFoodMols, nrReactions, catMethod, seed, nrInstances;
 float      p;
-bool       noFoodCat;
+bool       noFoodCat, forwardOnly;
 string    *molecules, **reactions;
 list<int> *catalysts;
 
@@ -147,6 +147,7 @@ int getArguments (int argc, char **argv)
   catMethod = UNIFCAT;
   nrInstances = 1;
   noFoodCat = false;
+  forwardOnly = false;
   seed = 0;
   
   /*
@@ -167,7 +168,8 @@ int getArguments (int argc, char **argv)
 	   << endl
 	   << "  -i I:  The number of instances I to generate (I > 0; default = 1)."
 	   << endl
-	   << "  -f:    Do not allow food molecules to be catalysts." << endl
+	   << "  -x:    Exclude food molecules from being catalysts." << endl
+	   << "  -f:    Use only forward (ligation) reactions." << endl
 	   << "  -s S:  The random seed S (S >= 0; default = 0: use current time)."
 	   << endl
 	   << "  -help: Print this help message and exit." << endl;
@@ -232,9 +234,14 @@ int getArguments (int argc, char **argv)
       }
       i++;
     }
-    else if (strcmp (argv[i], "-f") == 0)
+    else if (strcmp (argv[i], "-x") == 0)
     {
       noFoodCat = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-f") == 0)
+    {
+      forwardOnly = true;
       i++;
     }
     else if (strcmp (argv[i], "-s") == 0)
@@ -568,7 +575,15 @@ void writeToFile (ofstream& os)
     {
       os << reactions[i][0] << " + " << reactions[i][1];
     }
-    os << " <=> " << reactions[i][2];
+    if (forwardOnly)
+    {
+      os << " => ";
+    }
+    else
+    {
+      os << " <=> ";
+    }
+    os << reactions[i][2];
     if ((nrCat = (catalysts[i]).size ()) > 0)
     {
       j = 1;

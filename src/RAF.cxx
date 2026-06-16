@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 23 April 2026
+** Wim Hordijk   Last modified: 16 June 2026
 */
 
 #include <iostream>
@@ -311,7 +311,7 @@ int getArguments (int argc, char **argv)
       else
       {
 	status = -1;
-	cerr << "Invalid value for argument '-show': " << argv[i] << "." << endl
+	cerr << "Invalid value for argument '-print': " << argv[i] << "." << endl
 	     << "  Should be 'none', 'ID', or 'reac'." << endl;
 	goto End_of_Routine;
       }
