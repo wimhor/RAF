@@ -159,7 +159,7 @@ int getArguments (int argc, char **argv)
     {
       status = -1;
       cout << "Usage: " << argv[0]
-	   << " n t p [-c {unif|plaw}] [-i I] [-f] [-s S] [-help]" << endl << endl
+	   << " n t p [-c {unif|plaw}] [-i I] [-x] [-f] [-s S] [-help]" << endl << endl
 	   << "  n:     The maximum polymer length (n > 1)." << endl
 	   << "  t:     The maximum food polymer length (1 <= t <= n)." << endl
 	   << "  p:     The catalysis probability (p >= 0.0)." << endl
