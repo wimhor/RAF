@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 23 April 2026
+** Wim Hordijk   Last modified: 17 August 2026
 */
 
 #include <string.h>
@@ -2391,6 +2391,9 @@ void ReacSet::copy (ReacSet *source)
 
 /*
 ** maxRAF2pyCOT: Write the maxRAF in pyCOT format to compute its organizations.
+**               Note that an 'm' is written in front of each molecule label,
+**               otherwise pyCOT will interpret it as a number if it is a bit
+**               string from the BPM.
 */
 
 void ReacSet::maxRAF2pyCOT ()
@@ -2404,7 +2407,7 @@ void ReacSet::maxRAF2pyCOT ()
   /*
   ** Open the file for writing.
   */
-  ofs.open ("pyCOT.crs");
+  ofs.open ("pyCOT.crn");
   if (!ofs.is_open ())
   {
     cerr << "Could not open output file 'pyCOT.crn'." << endl;

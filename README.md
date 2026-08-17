@@ -1,7 +1,7 @@
 ![RAF logo](/img/RAFlogo.jpg)
 
 # RAF
-Code for detecting and analyzing Reflexively Autocatalytic and Food-generated (RAF) sets, and for generating random instances of the Binary Polymer Model.
+C++ code for detecting and analyzing Reflexively Autocatalytic and Food-generated (RAF) sets, and for generating random instances of the Binary Polymer Model (BPM).
 
 This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of hacks and trials & errors. The current code provides the basic functionality of finding the maxRAF, maxCAF, and irreducible RAFs (iRAFs) and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
 - W. Hordijk and M. Steel. [Autocatalytic networks at the basis of life's origin and organization](https://www.mdpi.com/2075-1729/8/4/62). _Life_ 8:62, 2018.
