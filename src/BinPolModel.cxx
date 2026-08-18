@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 16 June 2026
+** Wim Hordijk   Last modified: 18 August 2026
 */
 
 #include <stdlib.h>
@@ -40,7 +40,7 @@ void writeToFile       (ofstream& os);
 */
 int        n, t, nrMolecules, nrFoodMols, nrReactions, catMethod, seed, nrInstances;
 float      p;
-bool       noFoodCat, forwardOnly;
+bool       noFoodCat, forwardOnly, bidirect;
 string    *molecules, **reactions;
 list<int> *catalysts;
 
@@ -148,6 +148,7 @@ int getArguments (int argc, char **argv)
   nrInstances = 1;
   noFoodCat = false;
   forwardOnly = false;
+  bidirect = false;
   seed = 0;
   
   /*
@@ -159,7 +160,8 @@ int getArguments (int argc, char **argv)
     {
       status = -1;
       cout << "Usage: " << argv[0]
-	   << " n t p [-c {unif|plaw}] [-i I] [-x] [-f] [-s S] [-help]" << endl << endl
+	   << " n t p [-c {unif|plaw}] [-i I] [-x] [-f] [-b] [-s S] [-help]" << endl
+	   << endl
 	   << "  n:     The maximum polymer length (n > 1)." << endl
 	   << "  t:     The maximum food polymer length (1 <= t <= n)." << endl
 	   << "  p:     The catalysis probability (p >= 0.0)." << endl
@@ -170,6 +172,8 @@ int getArguments (int argc, char **argv)
 	   << endl
 	   << "  -x:    Exclude food molecules from being catalysts." << endl
 	   << "  -f:    Use only forward (ligation) reactions." << endl
+	   << "  -b:    Write corresponding ligation & cleavage reactions as a " << endl
+	   << "         single bi-directional reaction (ignored with -f)." << endl
 	   << "  -s S:  The random seed S (S >= 0; default = 0: use current time)."
 	   << endl
 	   << "  -help: Print this help message and exit." << endl;
@@ -242,6 +246,11 @@ int getArguments (int argc, char **argv)
     else if (strcmp (argv[i], "-f") == 0)
     {
       forwardOnly = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-b") == 0)
+    {
+      bidirect = true;
       i++;
     }
     else if (strcmp (argv[i], "-s") == 0)
@@ -566,42 +575,117 @@ void writeToFile (ofstream& os)
   os << "#Reactions"<< endl;
   for (i = 0; i < nrReactions; i++)
   {
-    os << "r" << i+1 << ": ";
-    if ((reactions[i][0]).compare (reactions[i][1]) == 0)
+    if (forwardOnly || bidirect)
     {
-      os << "2 " << reactions[i][0];
-    }
-    else
-    {
-      os << reactions[i][0] << " + " << reactions[i][1];
-    }
-    if (forwardOnly)
-    {
-      os << " => ";
-    }
-    else
-    {
-      os << " <=> ";
-    }
-    os << reactions[i][2];
-    if ((nrCat = (catalysts[i]).size ()) > 0)
-    {
-      j = 1;
-      os << " (";
-      itCat = (catalysts[i]).begin ();
-      while (itCat != (catalysts[i]).end ())
+      /*
+      ** Write as single reaction.
+      */
+      os << "r" << i+1 << ": ";
+      if ((reactions[i][0]).compare (reactions[i][1]) == 0)
       {
-	os << molecules[*itCat];
-	if (j < nrCat)
-	{
-	  os << " ";
-	}
-	j++;
-	itCat++;
+	os << "2 " << reactions[i][0];
       }
-      os << ")";
+      else
+      {
+	os << reactions[i][0] << " + " << reactions[i][1];
+      }
+      if (forwardOnly)
+      {
+	os << " => ";
+      }
+      else
+      {
+	os << " <=> ";
+      }
+      os << reactions[i][2];
+      if ((nrCat = (catalysts[i]).size ()) > 0)
+      {
+	j = 1;
+	os << " (";
+	itCat = (catalysts[i]).begin ();
+	while (itCat != (catalysts[i]).end ())
+	{
+	  os << molecules[*itCat];
+	  if (j < nrCat)
+	  {
+	    os << " ";
+	  }
+	  j++;
+	  itCat++;
+	}
+	os << ")";
+      }
+      os << endl;
     }
-    os << endl;
+    else
+    {
+      /*
+      ** Write as separate forward and backward reactions.
+      **
+      ** Forward first.
+      */
+      os << "r" << i+1 << "_f: ";
+      if ((reactions[i][0]).compare (reactions[i][1]) == 0)
+      {
+	os << "2 " << reactions[i][0];
+      }
+      else
+      {
+	os << reactions[i][0] << " + " << reactions[i][1];
+      }
+      os << " => ";
+      os << reactions[i][2];
+      if ((nrCat = (catalysts[i]).size ()) > 0)
+      {
+	j = 1;
+	os << " (";
+	itCat = (catalysts[i]).begin ();
+	while (itCat != (catalysts[i]).end ())
+	{
+	  os << molecules[*itCat];
+	  if (j < nrCat)
+	  {
+	    os << " ";
+	  }
+	  j++;
+	  itCat++;
+	}
+	os << ")";
+      }
+      os << endl;
+      /*
+      ** Backward next.
+      */
+      os << "r" << i+1 << "_b: ";
+      os << reactions[i][2];
+      os << " => ";
+      if ((reactions[i][0]).compare (reactions[i][1]) == 0)
+      {
+	os << "2 " << reactions[i][0];
+      }
+      else
+      {
+	os << reactions[i][0] << " + " << reactions[i][1];
+      }
+      if ((nrCat = (catalysts[i]).size ()) > 0)
+      {
+	j = 1;
+	os << " (";
+	itCat = (catalysts[i]).begin ();
+	while (itCat != (catalysts[i]).end ())
+	{
+	  os << molecules[*itCat];
+	  if (j < nrCat)
+	  {
+	    os << " ";
+	  }
+	  j++;
+	  itCat++;
+	}
+	os << ")";
+      }
+      os << endl;
+    }
   }
   /*
   ** Write the food set.
