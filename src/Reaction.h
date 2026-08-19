@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 23 April 2026
+** Wim Hordijk   Last modified: 19 August 2026
 */
 
 #ifndef _REACTION_H_
@@ -38,7 +38,7 @@ class Reaction
   /*
   ** Public member functions.
   */
-  void      getID             (string *id);
+  void      getID             (string& id);
   int       getNrReactants    ();
   Molecule *getReactantFirst  ();
   Molecule *getReactantNext   ();

@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 17 August 2026
+** Wim Hordijk   Last modified: 19 August 2026
 */
 
 #include <string.h>
@@ -1024,19 +1024,21 @@ void ReacSet::computeClosureF ()
 **       the 'strtok' function which is quite useful here.
 **
 ** Arguments:
-**   - ifs: The input file stream to read from.
+**   - ifs:   The input file stream to read from.
+**   - split: Split bi-directional reactions into separate forward and backward
+**            reactions.
 **
 ** Returns:
 **   If reaction set could be read successfully:  0.
 **   Otherwise:                                  -1.
 */
 
-int ReacSet::readFromFile (ifstream& is)
+int ReacSet::readFromFile (ifstream& is, bool split)
 {
   int              n, status, lineNr;
-  bool             bidirectional;
   char             line[2048], segment[1024], label[64], *token, *pch;
   size_t           len;
+  string           id;
   Molecule        *mol;
   Reaction        *reac, *bReac;
   list<Molecule*>  catalyst;
@@ -1211,9 +1213,58 @@ int ReacSet::readFromFile (ifstream& is)
       }
     }
     /*
-    ** Add the reaction to the reaction set and read the next line.
+    ** Everything read: add the reaction to the reaction set.
     */
     addReaction (reac);
+    /*
+    ** If the reaction is bi-directional and needs to be split, change it to
+    ** uni-directional and add the backward reaction as well.
+    */
+    if ((reac->getDirection () == BI_DIR) && split)
+    {
+      reac->setDirection (UNI_DIR);
+      reac->getID (id);
+      bReac = new Reaction (id + "_b");
+      bReac->setDirection (UNI_DIR);
+      /*
+      ** Copy the products of the forward reactions as the reactants of the
+      ** backward reaction.
+      */
+      mol = reac->getProductFirst ();
+      while (mol != NULL)
+      {
+	n = reac->getProdStoich (mol);
+	bReac->addReactant (mol, n);
+	mol = reac->getProductNext ();
+      }
+      /*
+      ** Copy the reactants of the forward reactions as the products of the
+      ** backward reaction.
+      */
+      mol = reac->getReactantFirst ();
+      while (mol != NULL)
+      {
+	n = reac->getReacStoich (mol);
+	bReac->addProduct (mol, n);
+	mol = reac->getReactantNext ();
+      }
+      /*
+      ** Copy the catalysts.
+      */
+      mol = reac->getCatalystFirst ();
+      while (mol != NULL)
+      {
+	bReac->addCatalyst (mol);
+	mol = reac->getCatalystNext ();
+      }      
+      /*
+      ** Add the backward reaction to the reaction set.
+      */
+      addReaction (bReac);
+    }
+    /*
+    ** Read the next line.
+    */
     is.getline (line, 1024);
   }
   /*
@@ -1262,7 +1313,7 @@ void ReacSet::printReaction (Reaction *reac)
   string    s;
   Molecule *mol;
 
-  reac->getID (&s);
+  reac->getID (s);
   cout << s << ": ";
   /*
   ** Print the reactants.
@@ -1391,7 +1442,7 @@ void ReacSet::printReacSet (bool full)
     }
     else
     {
-      reac->getID (&s);
+      reac->getID (s);
       cout << s << " ";
     }
     itReaction++;
@@ -2430,7 +2481,7 @@ void ReacSet::maxRAF2pyCOT ()
       if (maxRAF->isInClosureF (cat))
       {
 	i++;
-	reac->getID (&s);
+	reac->getID (s);
 	ofs << s << "_" << i << ": ";
 	/*
 	** Write the reactants and add the catalyst.
@@ -2495,7 +2546,7 @@ void ReacSet::maxRAF2pyCOT ()
 	*/
 	if (reac->getDirection () == BI_DIR)
 	{
-	  reac->getID (&s);
+	  reac->getID (s);
 	  ofs << s << "_" << i << "b: ";
 	  /*
 	  ** Write the products and add the catalyst.

@@ -55,6 +55,7 @@ For the `RAF` program, the following argument is required:
   - `<infile>`: The file from which to read the reaction network.
 
 while these are optional:
+  - `-split`:   Split bi-directional reactions into separate forward and backward reactions.
   - `-CAF`:     Compute the maxCAF.
   - `-iRAF I`:  Generate a random sample of size `I` of irreducible RAFs (iRAFs; only unique ones are shown). If `I=0`, find all iRAFs (this may take very long!).
   - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crs' to compute all organizations with pyCOT.

@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 16 June 2026
+** Wim Hordijk   Last modified: 19 August 2026
 */
 
 #include <iostream>
@@ -19,7 +19,7 @@ int getArguments (int argc, char **argv);
 ** Global variables.
 */
 int    smplSizeI, smplSizeC;
-bool   computeCAF, sampleiRAFs, samplecRAFs, showID, showReac;
+bool   computeCAF, sampleiRAFs, samplecRAFs, showID, showReac, splitReacs;
 string inputFile;
 
 
@@ -64,7 +64,7 @@ int main (int argc, char **argv)
     goto End_of_Routine;
   }
   rSet = new ReacSet ();
-  if (rSet->readFromFile (ifs) == -1)
+  if (rSet->readFromFile (ifs, splitReacs) == -1)
   {
     status = 1;
     goto End_of_Routine;
@@ -205,6 +205,7 @@ int getArguments (int argc, char **argv)
   inputFile.assign ("");
   smplSizeI = 100;
   smplSizeC = 100;
+  splitReacs = false;
   
   /*
   ** Get and check all arguments.
@@ -220,9 +221,11 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-CAF] [-iRAF I] [-cRAF C] [-print {none|ID|reac}] [-help]"
+	 << " <inFile> [-split] [-CAF] [-iRAF I] [-cRAF C] [-print {none|ID|reac}] [-help]"
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
+	 << "  -split:   Split bi-directional reactions into separate forward " << endl
+	 << "            and backward reactions." << endl
 	 << "  -CAF:     Compute the CAF." << endl
 	 << "  -iRAF I:  Generate a random sample of size I of iRAFs (only unique ones "
 	 << endl
@@ -243,6 +246,11 @@ int getArguments (int argc, char **argv)
   i = 2;
   while (i < argc)
   {
+    if (strcmp (argv[i], "-split") == 0)
+    {
+      splitReacs = true;
+      i++;
+    }
     if (strcmp (argv[i], "-CAF") == 0)
     {
       computeCAF = true;

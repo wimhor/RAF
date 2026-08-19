@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 23 April 2026
+** Wim Hordijk   Last modified: 19 August 2026
 */
 
 #include "Reaction.h"
@@ -53,12 +53,12 @@ Reaction::~Reaction ()
 **   - id: A pointer to a string to hold (a copy of) the reaction ID.
 */
 
-void Reaction::getID (string *id)
+void Reaction::getID (string& id)
 {
   /*
   ** Copy the reaction ID.
   */
-  id->assign (ID);
+  id.assign (ID);
 }
 
 
