@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 19 August 2026
+** Wim Hordijk   Last modified: 20 August 2026
 */
 
 #include <string.h>
@@ -1968,6 +1968,11 @@ int ReacSet::sampleiRAFs (int sampleSize)
       }
     }
   }
+
+  /*
+  ** Sort the list.
+  */
+  iRAFs.sort (compareReacSets);
   
   /*
   ** Return the result.
@@ -2649,6 +2654,39 @@ void ReacSet::maxRAF2pyCOT ()
 
  End_of_Routine:
   ;
+}
+
+
+/*
+** compareReacSets: Compare the sizes of two reaction sets.
+**
+** Arguments:
+**   - first:  A pointer to the first reaction set.
+**   - second: A pointer to the second reaction set.
+*
+** Returns:
+**   If the size of the first reaction set is
+**   smaller than that of the second reaction set: true.
+**   Otherwise:                                    false.
+*/
+
+bool ReacSet::compareReacSets (ReacSet *first, ReacSet *second)
+{
+  bool comp;
+  
+  /*
+  ** Compare the sizes of the reaction sets.
+  */
+  if (first->getNrReactions () < second->getNrReactions ())
+  {
+    comp = true;
+  }
+  else
+  {
+    comp = false;
+  }
+
+  return (comp);
 }
 
 
