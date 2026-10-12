@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 19 August 2026
+** Wim Hordijk   Last modified: 12 October 2026
 */
 
 #ifndef _REACTION_H_
@@ -32,7 +32,7 @@ class Reaction
   /*
   ** Constructors and destructors.
   */
-   Reaction  (string id);
+   Reaction (string id);
   ~Reaction ();
 
   /*
@@ -56,11 +56,12 @@ class Reaction
   void      removeProduct     (Molecule *mol);
   void      clearProducts     ();
   int       getNrCatalysts    ();
-  Molecule *getCatalystFirst  ();
-  Molecule *getCatalystNext   ();
+  int       getCatalystFirst  (list<Molecule*>& cat);
+  int       getCatalystNext   (list<Molecule*>& cat);
   bool      hasCatalyst       (Molecule *mol);
-  void      addCatalyst       (Molecule *mol);
-  void      removeCatalyst    (Molecule *mol);
+  void      addCatalyst       (list<Molecule*>& cat);
+  void      addMultiCatalyst  (Molecule *cat);
+  void      removeCatalyst    (list<Molecule*>& cat);
   void      clearCatalysts    ();
   void      setDirection      (int dir);
   int       getDirection      ();
@@ -74,11 +75,13 @@ class Reaction
   /*
   ** Private member variables.
   */
-  string                    ID;
-  int                       direction;
-  list<Molecule*>           reactants, products, catalysts;
-  list<Molecule*>::iterator itReactant, itProduct, itCatalyst;
-  map<Molecule*,int>        reacStoich, prodStoich;
+  string                          ID;
+  int                             direction;
+  list<Molecule*>                 reactants, products;
+  list<list<Molecule*>>           catalysts;
+  list<Molecule*>::iterator       itReactant, itProduct, itCatalyst;
+  list<list<Molecule*>>::iterator itCatList;
+  map<Molecule*,int>              reacStoich, prodStoich;
 };
 
 

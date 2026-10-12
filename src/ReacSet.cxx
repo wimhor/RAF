@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 20 August 2026
+** Wim Hordijk   Last modified: 12 October 2026
 */
 
 #include <string.h>
@@ -488,6 +488,9 @@ Reaction *ReacSet::getReactionNext ()
 /*
 ** isInReacSet: Check whether a reaction is in the reaction set.
 **
+** Note: This comparison is based purely on pointers to reactions. Different
+**       instantiations of the same reaction will have different pointers.
+**
 ** Arguments:
 **   - reac: The reaction to check for.
 **
@@ -636,9 +639,12 @@ void ReacSet::clearReactions ()
 
 int ReacSet::applyRAFalgo ()
 {
-  bool      reactionsRemoved, remove;
-  Molecule *mol;
-  Reaction *reac;
+  int                        nextCat;
+  bool                       reactionsRemoved, remove;
+  Molecule                  *mol;
+  Reaction                  *reac;
+  list<Molecule*>            cat;
+  list<Molecule*>::iterator  itCat;
 
   /*
   ** First remove all reactions that have no catalysts.
@@ -681,18 +687,29 @@ int ReacSet::applyRAFalgo ()
       if (reac->applied)
       {
 	/*
-	** Check the catalysts.
+	** Check the catalysts. Since reactions without catalysts have already been
+	** removed, there is always at least one catalyst.
 	*/
 	remove = true;
-	mol = reac->getCatalystFirst ();
-	while (mol != NULL)
+	nextCat = reac->getCatalystFirst (cat);
+	while (nextCat)
 	{
-	  if (mol->inClosure)
+	  itCat = cat.begin ();
+	  while (itCat != cat.end ())
+	  {
+	    mol = *itCat;
+	    if (!mol->inClosure)
+	    {
+	      break;
+	    }
+	    itCat++;
+	  }
+	  if (itCat == cat.end ())
 	  {
 	    remove = false;
 	    break;
 	  }
-	  mol = reac->getCatalystNext ();
+	  nextCat = reac->getCatalystNext (cat);
 	}
       }
       else
@@ -1036,7 +1053,8 @@ void ReacSet::computeClosureF ()
 int ReacSet::readFromFile (ifstream& is, bool split)
 {
   int              n, status, lineNr;
-  char             line[2048], segment[1024], label[64], *token, *pch;
+  char             line[2048], segment[1024], label[64], *token, *token2, *saveptr1,
+                  *saveptr2, *pch;
   size_t           len;
   string           id;
   Molecule        *mol;
@@ -1187,29 +1205,45 @@ int ReacSet::readFromFile (ifstream& is, bool split)
       len = token - pch;
       strncpy (segment, pch+1, len-1);
       segment[len-1] = '\0';
+      pch = token + 1;
       /*
-      ** Get the catalysts.
+      ** Get the catalysts within the parentheses.
       */
-      token = strtok (segment, " ");
+      token = strtok_r (segment, " ", &saveptr1);
       while (token != NULL)
       {
-	if ((mol = getMoleculeBySeq (token)) == NULL)
+	catalyst.clear ();
+	token2 = strtok_r (token, "&", &saveptr2);
+	while (token2 != NULL)
 	{
-	  mol = new Molecule (token);
-	  addMolecule (mol);
+	  if ((mol = getMoleculeBySeq (token2)) == NULL)
+	  {
+	    mol = new Molecule (token2);
+	    addMolecule (mol);
+	  }
+	  catalyst.push_back (mol);
+	  token2 = strtok_r (NULL, "&", &saveptr2);
 	}
-	if (!reac->hasCatalyst (mol))
+	reac->addCatalyst (catalyst);
+	token = strtok_r (NULL, " ", &saveptr1);
+      }
+      /*
+      ** Add any "multi-catalysts".
+      */
+      if (*pch == '&')
+      {
+	pch++;
+	token = strtok (pch, "&");
+	while (token != NULL)
 	{
-	  reac->addCatalyst (mol);
+	  if ((mol = getMoleculeBySeq (token)) == NULL)
+	  {
+	    mol = new Molecule (token);
+	    addMolecule (mol);
+	  }
+	  reac->addMultiCatalyst (mol);
+	  token = strtok (NULL, "&");
 	}
-	else
-	{
-	  status = -1;
-	  cerr << "Catalyst " << token << " appears more than once in line "
-	       << lineNr << " of input file." << endl;
-	  goto End_of_Routine;	
-	}
-	token = strtok (NULL, " ");
       }
     }
     /*
@@ -1251,11 +1285,11 @@ int ReacSet::readFromFile (ifstream& is, bool split)
       /*
       ** Copy the catalysts.
       */
-      mol = reac->getCatalystFirst ();
-      while (mol != NULL)
+      n = reac->getCatalystFirst (catalyst);
+      while (n)
       {
-	bReac->addCatalyst (mol);
-	mol = reac->getCatalystNext ();
+	bReac->addCatalyst (catalyst);
+	n = reac->getCatalystNext (catalyst);
       }      
       /*
       ** Add the backward reaction to the reaction set.
@@ -1309,9 +1343,12 @@ int ReacSet::readFromFile (ifstream& is, bool split)
 
 void ReacSet::printReaction (Reaction *reac)
 {
-  int       n;
-  string    s;
-  Molecule *mol;
+  int                        n;
+  bool                       inClF;
+  string                     s;
+  Molecule                  *mol;
+  list<Molecule*>            cat;
+  list<Molecule*>::iterator  itCat;
 
   reac->getID (s);
   cout << s << ": ";
@@ -1378,34 +1415,50 @@ void ReacSet::printReaction (Reaction *reac)
     }
   }
   /*
-  ** Print the catalysts, but only the ones that are in the closure.
+  ** Print the catalysts, but only the ones that are in the closure of the food set.
   */
   if (reac->getNrCatalysts () > 0)
   {
-    n = 0;
-    mol = reac->getCatalystFirst ();
-    while (mol != NULL)
+    cout << "(";
+    n = reac->getCatalystFirst (cat);
+    while (n)
     {
-      if (isInClosureF (mol))
+      /*
+      ** Check if all molecules in the current catalyst are in the closure.
+      */
+      inClF = true;
+      itCat = cat.begin ();
+      while (itCat != cat.end ())
       {
-	if (n == 0)
+	mol = *itCat;
+	if (!isInClosureF (mol))
 	{
-	  cout << "(";
+	  inClF = false;
+	  break;
 	}
-	else
-	{
-	  cout << " ";
-	}
-	mol->getSequence (s);
-	cout << s;
-	n++;
+	itCat++;
       }
-      mol = reac->getCatalystNext ();
+      /*
+      ** If in the closure, print the current catalyst.
+      */
+      if (inClF)
+      {
+	itCat = cat.begin ();
+	while (itCat != cat.end ())
+	{
+	  mol = *itCat;
+	  mol->getSequence (s);
+	  cout << s << "&";
+	  itCat++;
+	}
+	cout << "\b ";
+      }
+      /*
+      ** Get the next catalyst.
+      */
+      n = reac->getCatalystNext (cat);
     }
-    if (n > 0)
-    {
-      cout << ")";
-    }
+    cout << "\b)";
   }
   cout << endl;
 }
@@ -1525,12 +1578,14 @@ int ReacSet::findCAF ()
 
 int ReacSet::applyCAFalgo ()
 {
-  int                        size;
+  int                        size, nextCat;
   bool                       reacsAdded, apply;
   Molecule                  *mol;
   Reaction                  *reac;
   list<Reaction*>            tmpCAF;
   list<Reaction*>::iterator  itCAF;
+  list<Molecule*>            cat;
+  list<Molecule*>::iterator  itCat;
 
   /*
   ** First remove all reactions that have no catalysts.
@@ -1614,15 +1669,25 @@ int ReacSet::applyCAFalgo ()
 	if (apply)
 	{
 	  apply = false;
-	  mol = reac->getCatalystFirst ();
-	  while (mol != NULL)
+	  nextCat = reac->getCatalystFirst (cat);
+	  while (nextCat)
 	  {
-	    if (mol->inClosure)
+	    itCat = cat.begin ();
+	    while (itCat != cat.end ())
+	    {
+	      mol = *itCat;
+	      if (!mol->inClosure)
+	      {
+		break;
+	      }
+	      itCat++;
+	    }
+	    if (itCat == cat.end ())
 	    {
 	      apply = true;
 	      break;
 	    }
-	    mol = reac->getCatalystNext ();
+	    nextCat = reac->getCatalystNext (cat);
 	  }
 	}
 	/*
@@ -1670,15 +1735,25 @@ int ReacSet::applyCAFalgo ()
 	  if (apply)
 	  {
 	    apply = false;
-	    mol = reac->getCatalystFirst ();
-	    while (mol != NULL)
+	    nextCat = reac->getCatalystFirst (cat);
+	    while (nextCat)
 	    {
-	      if (mol->inClosure)
+	      itCat = cat.begin ();
+	      while (itCat != cat.end ())
+	      {
+		mol = *itCat;
+		if (!mol->inClosure)
+		{
+		  break;
+		}
+		itCat++;
+	      }
+	      if (itCat == cat.end ())
 	      {
 		apply = true;
 		break;
 	      }
-	      mol = reac->getCatalystNext ();
+	      nextCat = reac->getCatalystNext (cat);
 	    }
 	  }
 	  /*
@@ -2305,9 +2380,12 @@ int ReacSet::randomcRAF (default_random_engine& dre)
 
 bool ReacSet::isClosed (ReacSet *rset)
 {
-  bool      closed, applied;
-  Molecule *mol;
-  Reaction *reac;
+  int                        nextCat;
+  bool                       closed, applied;
+  Molecule                  *mol;
+  Reaction                  *reac;
+  list<Molecule*>            cat;
+  list<Molecule*>::iterator  itCat;
   
   /*
   ** Check each reaction in the maxRAF that is not in the given set.
@@ -2356,15 +2434,25 @@ bool ReacSet::isClosed (ReacSet *rset)
 	** Check if at least one catalyst is in the closure of the food set.
 	*/
 	applied = false;
-	mol = reac->getCatalystFirst ();
-	while (mol != NULL)
+	nextCat = reac->getCatalystFirst (cat);
+	while (nextCat)
 	{
-	  if (rset->isInClosureF (mol))
+	  itCat = cat.begin ();
+	  while (itCat != cat.end ())
+	  {
+	    mol = *itCat;
+	    if (!rset->isInClosureF (mol))
+	    {
+	      break;
+	    }
+	    itCat++;
+	  }
+	  if (itCat == cat.end ())
 	  {
 	    applied = true;
 	    break;
 	  }
-	  mol = reac->getCatalystNext ();
+	  nextCat = reac->getCatalystNext (cat);
 	}
       }
       /*
@@ -2454,11 +2542,14 @@ void ReacSet::copy (ReacSet *source)
 
 void ReacSet::maxRAF2pyCOT ()
 {
-  int       i, n;
-  ofstream  ofs;
-  string    s;
-  Molecule *cat, *mol;
-  Reaction *reac;
+  int                        i, n, nextCat;
+  bool                       inClF;
+  ofstream                   ofs;
+  string                     s;
+  Molecule                  *mol;
+  Reaction                  *reac;
+  list<Molecule*>            cat;
+  list<Molecule*>::iterator  itCat;
 
   /*
   ** Open the file for writing.
@@ -2480,10 +2571,28 @@ void ReacSet::maxRAF2pyCOT ()
     ** For each catalyst that is in the closure, write the reaction.
     */
     i = 0;
-    cat = reac->getCatalystFirst ();
-    while (cat != NULL)
+    nextCat = reac->getCatalystFirst (cat);
+    while (nextCat)
     {
-      if (maxRAF->isInClosureF (cat))
+      /*
+      ** Check if all molecules in the current catalyst are in the closure.
+      */
+      inClF = true;
+      itCat = cat.begin ();
+      while (itCat != cat.end ())
+      {
+	mol = *itCat;
+	if (!isInClosureF (mol))
+	{
+	  inClF = false;
+	  break;
+	}
+	itCat++;
+      }
+      /*
+      ** If in the closure, write the reaction.
+      */
+      if (inClF)
       {
 	i++;
 	reac->getID (s);
@@ -2497,7 +2606,7 @@ void ReacSet::maxRAF2pyCOT ()
 	  n = reac->getReacStoich (mol);
 	  if (n > 1)
 	  {
-	    ofs << n << " ";
+	    ofs << n;
 	  }
 	  mol->getSequence (s);
 	  ofs <<  "m" << s << " ";
@@ -2508,15 +2617,22 @@ void ReacSet::maxRAF2pyCOT ()
 	    n = reac->getReacStoich (mol);
 	    if (n > 1)
 	    {
-	      ofs << n << " ";
+	      ofs << n;
 	    }
 	    mol->getSequence (s);
 	    ofs << "m" << s << " ";
 	    mol = reac->getReactantNext ();
 	  }
 	}
-	cat->getSequence (s);
-	ofs << "+ m" << s << " => ";
+	itCat = cat.begin ();
+	while (itCat != cat.end ())
+	{
+	  mol = *itCat;
+	  mol->getSequence (s);
+	  ofs << "+ m" << s << " ";
+	  itCat++;
+	}
+	ofs << "=> ";
 	/*
 	** Write the products and add the catalyst.
 	*/
@@ -2526,7 +2642,7 @@ void ReacSet::maxRAF2pyCOT ()
 	  n = reac->getProdStoich (mol);
 	  if (n > 1)
 	  {
-	    ofs << n << " ";
+	    ofs << n;
 	  }
 	  mol->getSequence (s);
 	  ofs << "m" << s << " ";
@@ -2537,15 +2653,22 @@ void ReacSet::maxRAF2pyCOT ()
 	    n = reac->getProdStoich (mol);
 	    if (n > 1)
 	    {
-	      ofs << n << " ";
+	      ofs << n;
 	    }
 	    mol->getSequence (s);
 	    ofs << "m" << s << " ";
 	    mol = reac->getProductNext ();
 	  }
 	}
-	cat->getSequence (s);
-	ofs << "+ m" << s << ";" << endl;
+	itCat = cat.begin ();
+	while (itCat != cat.end ())
+	{
+	  mol = *itCat;
+	  mol->getSequence (s);
+	  ofs << "+ m" << s << " ";
+	  itCat++;
+	}
+	ofs << "\b;" << endl;
 	/*
 	** If the reaction is bi-directional, write the reverse direction too.
 	*/
@@ -2562,7 +2685,7 @@ void ReacSet::maxRAF2pyCOT ()
 	    n = reac->getProdStoich (mol);
 	    if (n > 1)
 	    {
-	      ofs << n << " ";
+	      ofs << n;
 	    }
 	    mol->getSequence (s);
 	    ofs << "m" << s << " ";
@@ -2573,15 +2696,22 @@ void ReacSet::maxRAF2pyCOT ()
 	      n = reac->getProdStoich (mol);
 	      if (n > 1)
 	      {
-		ofs << n << " ";
+		ofs << n;
 	      }
 	      mol->getSequence (s);
 	      ofs << "m" << s << " ";
 	      mol = reac->getProductNext ();
 	    }
 	  }
-	  cat->getSequence (s);
-	  ofs << "+ m" << s << " => ";
+	  itCat = cat.begin ();
+	  while (itCat != cat.end ())
+	  {
+	    mol = *itCat;
+	    mol->getSequence (s);
+	    ofs << "+ m" << s << " ";
+	    itCat++;
+	  }
+	  ofs << "=> ";
 	  /*
 	  ** Write the reactants and add the catalyst.
 	  */
@@ -2591,7 +2721,7 @@ void ReacSet::maxRAF2pyCOT ()
 	    n = reac->getReacStoich (mol);
 	    if (n > 1)
 	    {
-	      ofs << n << " ";
+	      ofs << n;
 	    }
 	    mol->getSequence (s);
 	    ofs << "m" << s << " ";
@@ -2602,18 +2732,25 @@ void ReacSet::maxRAF2pyCOT ()
 	      n = reac->getReacStoich (mol);
 	      if (n > 1)
 	      {
-		ofs << n << " ";
+		ofs << n;
 	      }
 	      mol->getSequence (s);
 	      ofs << "m" << s << " ";
 	      mol = reac->getReactantNext ();
 	    }
 	  }
-	  cat->getSequence (s);
-	  ofs << "+ m" << s << ";" << endl;
+	  itCat = cat.begin ();
+	  while (itCat != cat.end ())
+	  {
+	    mol = *itCat;
+	    mol->getSequence (s);
+	    ofs << "+ m" << s << " ";
+	    itCat++;
+	  }
+	  ofs << "\b;" << endl;
 	}
       }
-      cat = reac->getCatalystNext ();
+      nextCat = reac->getCatalystNext (cat);
     }
     reac = maxRAF->getReactionNext ();
   }

@@ -1,7 +1,7 @@
 /*
 ** Reaction.cxx: Chemical reaction class.
 **
-** Wim Hordijk   Last modified: 19 August 2026
+** Wim Hordijk   Last modified: 6 October 2026
 */
 
 #include "Reaction.h"
@@ -22,7 +22,7 @@ Reaction::Reaction (string id)
   ID.assign (id);
   itReactant = reactants.begin ();
   itProduct = products.begin ();
-  itCatalyst = catalysts.begin ();
+  itCatList = catalysts.begin ();
   direction = UNI_DIR;
   applied = false;
 }
@@ -516,67 +516,84 @@ int Reaction::getNrCatalysts ()
 /*
 ** getCatalystFirst: Get the first catalyst in the list.
 **
+** Arguments:
+**   - A reference to a list of molecules (to be modified).
+**
 ** Returns:
-**   A pointer to the first catalyst in the list (NULL if list is empty).
+**   If there is at least one catalyst: 1 ('cat' will contain the first catalyst).
+**   Otherwise:                         0 ('cat' remains unchanged).
 */
 
-Molecule *Reaction::getCatalystFirst ()
+int Reaction::getCatalystFirst (list<Molecule*>& cat)
 {
-  Molecule *mol;
+  int status;
 
   /*
-  ** Get the first catalyst.
+  ** Get the first catalyst, if there is one.
   */
-  itCatalyst = catalysts.begin ();
-  if (itCatalyst != catalysts.end ())
+  status = 0;
+  itCatList = catalysts.begin ();
+  if (itCatList != catalysts.end ())
   {
-    mol = *itCatalyst;
-  }
-  else
-  {
-    mol = NULL;
+    cat.clear ();
+    itCatalyst = itCatList->begin ();
+    while (itCatalyst != itCatList->end ())
+    {
+      cat.push_back (*itCatalyst);
+      itCatalyst++;
+    }
+    status = 1;
   }
 
   /*
   ** Return the result.
   */
-  return (mol);
+  return (status);
 }
 
 
 /*
 ** getCatalystNext: Get the next catalyst in the list.
 **
+** Arguments:
+**   - A reference to a list of molecules (to be modified).
+**
 ** Returns:
-**   A pointer to the next catalyst in the list (NULL if end of list).
+**   If there is another catalyst: 1 ('cat' will contain the next catalyst).
+**   Otherwise:                    0 ('cat' remains unchanged).
 */
 
-Molecule *Reaction::getCatalystNext ()
+int Reaction::getCatalystNext (list<Molecule*>& cat)
 {
-  Molecule *mol;
+  int status;
 
   /*
   ** Get the next catalyst.
   */
-  itCatalyst++;
-  if (itCatalyst != catalysts.end ())
+  status = 0;
+  itCatList++;
+  if (itCatList != catalysts.end ())
   {
-    mol = *itCatalyst;
-  }
-  else
-  {
-    mol = NULL;
+    cat.clear ();
+    itCatalyst = itCatList->begin ();
+    while (itCatalyst != itCatList->end ())
+    {
+      cat.push_back (*itCatalyst);
+      itCatalyst++;
+    }
+    status = 1;
   }
 
   /*
   ** Return the result.
   */
-  return (mol);
+  return (status);
 }
 
 
 /*
-** hasCatalyst: Check if the reaction has a given molecule as a catalyst.
+** hasCatalyst: Check if the reaction has a given molecule as a catalyst, possibly
+**              as part of a catalyst complex.
 **
 ** Arguments:
 **   - mol: A molecule type.
@@ -593,14 +610,17 @@ bool Reaction::hasCatalyst (Molecule *mol)
   /*
   ** See if the given molecule is in the catalysts list.
   */
-  itCatalyst = find (catalysts.begin (), catalysts.end (), mol);
-  if (itCatalyst != catalysts.end ())
+  hasCat = false;
+  itCatList = catalysts.begin ();
+  while (itCatList != catalysts.end ())
   {
-    hasCat = true;
-  }
-  else
-  {
-    hasCat = false;
+    itCatalyst = find (itCatList->begin (), itCatList->end (), mol);
+    if (itCatalyst != itCatList->end ())
+    {
+      hasCat = true;
+      break;
+    }
+    itCatList++;
   }
 
   /*
@@ -611,22 +631,56 @@ bool Reaction::hasCatalyst (Molecule *mol)
 
 
 /*
-** addCatalyst: Add a catalyst to the list if it does not already exist.
+** addCatalyst: Add a catalyst to the list. Note that a check for duplicates is *not*
+**              performed!
 **
 ** Arguments:
-**   - mol: The molecule to add.
+**   - cat: A reference to a list of molecules to be added.
 */
 
-void Reaction::addCatalyst (Molecule *mol)
+void Reaction::addCatalyst (list<Molecule*>& cat)
+{
+  Molecule        *mol;
+  list<Molecule*> *newCat;
+  
+  /*
+  ** Add the catalyst complex to the list, and add the current reaction to each
+  ** molecule's "as catalyst" list.
+  */
+  newCat = new list<Molecule*> ();
+  itCatalyst = cat.begin ();
+  while (itCatalyst != cat.end ())
+  {
+    mol = *itCatalyst;
+    newCat->push_back (mol);
+    mol->addAsCatalyst (this);
+    itCatalyst++;
+  }
+  catalysts.push_back (*newCat);
+}
+
+
+/*
+** addMultiCatalyst: Add a "multi-catalyst", i.e., a catalyst that needs to be present
+**                   together with any other catalysts already in the list.
+**                   Note that a check for duplicates is *not* performed!
+**
+** Arguments:
+**   - mol: A molecule to be added as multi-catalyst.
+*/
+
+void Reaction::addMultiCatalyst (Molecule *cat)
 {
   /*
-  ** Add the catalyst to the list if it's not already there.
+  ** Add the multi-catalyst to each catalyst already in the list, and add the current
+  ** reaction to the multi-catalyst's "as catalyst" list.
   */
-  itCatalyst = find (catalysts.begin (), catalysts.end (), mol);
-  if (itCatalyst == catalysts.end ())
+  itCatList = catalysts.begin ();
+  while (itCatList != catalysts.end ())
   {
-    catalysts.push_back (mol);
-    mol->addAsCatalyst (this);
+    itCatList->push_back (cat);
+    cat->addAsCatalyst (this);
+    itCatList++;
   }
 }
 
@@ -635,16 +689,28 @@ void Reaction::addCatalyst (Molecule *mol)
 ** removeCatalyst: Remove a catalyst from the list.
 **
 ** Arguments:
-**   - mol: The molecule to remove.
+**   - A reference to a list of molecules (to be removed).
 */
 
-void Reaction::removeCatalyst (Molecule *mol)
+void Reaction::removeCatalyst (list<Molecule*>& cat)
 {
+  Molecule *mol;
+  
   /*
-  ** Remove the molecule from the list.
+  ** Remove the catalyst from the list.
   */
-  catalysts.remove (mol);
-  mol->removeAsCatalyst (this);
+  catalysts.remove (cat);
+  itCatalyst = cat.begin ();
+  while (itCatalyst != cat.end ())
+  {
+    mol = *itCatalyst;
+    if (!this->hasCatalyst (mol))
+    {
+      mol->removeAsCatalyst (this);
+    }
+    itCatalyst++;
+  }
+  cat.clear ();
 }
 
 
@@ -659,15 +725,21 @@ void Reaction::clearCatalysts ()
   /*
   ** Remove this reaction from its catalysts and clear the list.
   */
-  itCatalyst = catalysts.begin ();
-  while (itCatalyst != catalysts.end ())
+  itCatList = catalysts.begin ();
+  while (itCatList != catalysts.end ())
   {
-    mol = *itCatalyst;
-    mol->removeAsCatalyst (this);
-    itCatalyst++;
+    itCatalyst = itCatList->begin ();
+    while (itCatalyst != itCatList->end ())
+    {
+      mol = *itCatalyst;
+      mol->removeAsCatalyst (this);
+      itCatalyst++;
+    }
+    itCatList->clear ();
+    itCatList++;
   }
   catalysts.clear ();
-  itCatalyst = catalysts.begin ();
+  itCatList = catalysts.begin ();
 }
 
 
