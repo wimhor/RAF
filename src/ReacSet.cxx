@@ -1582,7 +1582,7 @@ int ReacSet::applyCAFalgo ()
   bool                       reacsAdded, apply;
   Molecule                  *mol;
   Reaction                  *reac;
-  list<Reaction*>            tmpCAF;
+  list<Reaction*>            tmpCAF, addGen;
   list<Reaction*>::iterator  itCAF;
   list<Molecule*>            cat;
   list<Molecule*>::iterator  itCat;
@@ -1693,28 +1693,12 @@ int ReacSet::applyCAFalgo ()
 	  }
 	}
 	/*
-	** Apply the reaction, if so indicated. If not, check the reverse
-	** direction if the reaction is bi-directional.
+	** If the reaction can be applied, include it in the list of reactions to add.
+	** If not, check the reverse direction if the reaction is bi-directional.
 	*/
 	if (apply)
 	{
-	  /*
-	  ** Add the reaction to the CAF and its products to the closure.
-	  */
-	  tmpCAF.push_back (reac);
-	  mol = reac->getProductFirst ();
-	  while (mol != NULL)
-	  {
-	    if (!mol->inClosure)
-	    {
-	      closure.push_back (mol);
-	      mol->inClosure = true;
-	    }
-	    mol = reac->getProductNext ();
-	  }
-	  reac->applied = true;
-	  reac->genCAF = gen;
-	  reacsAdded = true;
+	  addGen.push_back (reac);
 	}
 	else if (reac->getDirection () == BI_DIR)
 	{
@@ -1760,27 +1744,11 @@ int ReacSet::applyCAFalgo ()
 	    }
 	  }
 	  /*
-	  ** Apply the reaction, if so indicated.
+	  ** If the reaction can be applied, include it in the list of reactions to add.
 	  */
 	  if (apply)
 	  {
-	    /*
-	    ** Add the reaction to the CAF and its reactants to the closure.
-	    */
-	    tmpCAF.push_back (reac);
-	    mol = reac->getReactantFirst ();
-	    while (mol != NULL)
-	    {
-	      if (!mol->inClosure)
-	      {
-		closure.push_back (mol);
-		mol->inClosure = true;
-	      }
-	      mol = reac->getReactantNext ();
-	    }
-	    reac->applied = true;
-	    reac->genCAF = gen;
-	    reacsAdded = true;
+	    addGen.push_back (reac);
 	  }
 	}
       }
@@ -1789,6 +1757,41 @@ int ReacSet::applyCAFalgo ()
       */
       itReaction++;
     }
+    /*
+    ** Add the new reactions to the temporary CAF and their reactants and products
+    ** to the closure, if they were not already in there.
+    */
+    itCAF = addGen.begin ();
+    while (itCAF != addGen.end ())
+    {
+      reac = *itCAF;
+      tmpCAF.push_back (reac);
+      mol = reac->getReactantFirst ();
+      while (mol != NULL)
+      {
+	if (!mol->inClosure)
+	{
+	  closure.push_back (mol);
+	  mol->inClosure = true;
+	}
+	mol = reac->getReactantNext ();
+      }
+      mol = reac->getProductFirst ();
+      while (mol != NULL)
+      {
+	if (!mol->inClosure)
+	{
+	  closure.push_back (mol);
+	  mol->inClosure = true;
+	}
+	mol = reac->getProductNext ();
+      }
+      reac->applied = true;
+      reac->genCAF = gen;
+      reacsAdded = true;
+      itCAF++;
+    }
+    addGen.clear ();
   }
 
   /*
@@ -1812,7 +1815,7 @@ int ReacSet::applyCAFalgo ()
 
 
 /*
-** printCAF: Print the CAF reaction set.
+** printCAF: Print the CAF reaction set according to generation number.
 **
 ** Arguments:
 **   - full: Boolean indicating whether to print the full reaction ('true') or
@@ -1827,7 +1830,7 @@ void ReacSet::printCAF (bool full)
   Reaction *reac;
   
   /*
-  ** Print the CAF reaction set.
+  ** Print the CAF reaction set by generation number.
   */
   if (CAF->getNrReactions () > 0)
   {
@@ -2113,7 +2116,7 @@ ReacSet *ReacSet::randomiRAF (default_random_engine& dre)
 {
   int                          i, reacIndex, rSize;
   Reaction                    *reac;
-  ReacSet                     *sraf;
+  ReacSet                     *sraf, *iraf;
   vector<Reaction*>            shuffledReacs;
   vector<Reaction*>::iterator  itShufReac;
 
@@ -2124,7 +2127,23 @@ ReacSet *ReacSet::randomiRAF (default_random_engine& dre)
   sraf->copy (maxRAF);
 
   /*
-  ** Copy the maxRAF reactions and randomly shuffle them.
+  ** For any trivial (1-reaction) iRAF that was already found, remove the reaction
+  ** from the maxRAF (so it won't be found again).
+  */
+  itSubRAF = iRAFs.begin ();
+  while (itSubRAF != iRAFs.end ())
+  {
+    iraf = *itSubRAF;
+    if (iraf->getNrReactions () == 1)
+    {
+      reac = iraf->getReactionFirst ();
+      sraf->removeReaction (reac);
+    }
+    itSubRAF++;
+  }
+
+  /*
+  ** Copy the remaining maxRAF reactions and randomly shuffle them.
   */
   reac = maxRAF->getReactionFirst ();
   while (reac != NULL)
