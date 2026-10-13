@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 12 October 2026
+** Wim Hordijk   Last modified: 13 October 2026
 */
 
 #include <string.h>
@@ -1578,7 +1578,7 @@ int ReacSet::findCAF ()
 
 int ReacSet::applyCAFalgo ()
 {
-  int                        size, nextCat;
+  int                        size, nextCat, gen;
   bool                       reacsAdded, apply;
   Molecule                  *mol;
   Reaction                  *reac;
@@ -1634,9 +1634,11 @@ int ReacSet::applyCAFalgo ()
   ** to the closure.
   */
   reacsAdded = true;
+  gen = 0;
   while (reacsAdded)
   {
     reacsAdded = false;
+    gen++;
     /*
     ** Check each reaction that has not been applied yet.
     */
@@ -1711,6 +1713,7 @@ int ReacSet::applyCAFalgo ()
 	    mol = reac->getProductNext ();
 	  }
 	  reac->applied = true;
+	  reac->genCAF = gen;
 	  reacsAdded = true;
 	}
 	else if (reac->getDirection () == BI_DIR)
@@ -1776,6 +1779,7 @@ int ReacSet::applyCAFalgo ()
 	      mol = reac->getReactantNext ();
 	    }
 	    reac->applied = true;
+	    reac->genCAF = gen;
 	    reacsAdded = true;
 	  }
 	}
@@ -1817,10 +1821,52 @@ int ReacSet::applyCAFalgo ()
 
 void ReacSet::printCAF (bool full)
 {
+  int       gen;
+  bool      done;
+  string    s;
+  Reaction *reac;
+  
   /*
   ** Print the CAF reaction set.
   */
-  CAF->printReacSet (full);
+  if (CAF->getNrReactions () > 0)
+  {
+    gen = 0;
+    done = false;
+    while (!done)
+    {
+      gen++;
+      done = true;
+      cout << "  " << gen << ": ";
+      if (full)
+      {
+	cout << endl;
+      }
+      reac = CAF->getReactionFirst ();
+      while (reac != NULL)
+      {
+	if (reac->genCAF == gen)
+	{
+	  if (full)
+	  {
+	    cout << "    ";
+	    printReaction (reac);
+	  }
+	  else
+	  {
+	    reac->getID (s);
+	    cout << s << " ";
+	  }
+	  done = false;
+	}
+	reac = CAF->getReactionNext ();
+      }
+      if (!full)
+      {
+	cout << endl;
+      }
+    }
+  }
 }
 
 

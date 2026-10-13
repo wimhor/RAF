@@ -1,7 +1,7 @@
 /*
 ** Reaction.h: Definition of a chemical reaction.
 **
-** Wim Hordijk   Last modified: 12 October 2026
+** Wim Hordijk   Last modified: 13 October 2026
 */
 
 #ifndef _REACTION_H_
@@ -67,8 +67,9 @@ class Reaction
   int       getDirection      ();
 
   /*
-  ** Public member variables (for faster closure computation).
+  ** Public member variables (for closure computation).
   */
+  int  genF, genCAF;
   bool applied;
   
  private:
