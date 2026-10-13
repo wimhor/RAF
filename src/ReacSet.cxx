@@ -1343,7 +1343,7 @@ int ReacSet::readFromFile (ifstream& is, bool split)
 
 void ReacSet::printReaction (Reaction *reac)
 {
-  int                        n;
+  int                        n, i, k;
   bool                       inClF;
   string                     s;
   Molecule                  *mol;
@@ -1419,6 +1419,7 @@ void ReacSet::printReaction (Reaction *reac)
   */
   if (reac->getNrCatalysts () > 0)
   {
+    k = 0;
     cout << "(";
     n = reac->getCatalystFirst (cat);
     while (n)
@@ -1443,22 +1444,32 @@ void ReacSet::printReaction (Reaction *reac)
       */
       if (inClF)
       {
+	k++;
+	if (k > 1)
+	{
+	  cout << " ";
+	}
+	i = 1;
 	itCat = cat.begin ();
 	while (itCat != cat.end ())
 	{
 	  mol = *itCat;
+	  if (i > 1)
+	  {
+	    cout << "&";
+	  }
 	  mol->getSequence (s);
-	  cout << s << "&";
+	  cout << s;
 	  itCat++;
+	  i++;
 	}
-	cout << "\b ";
       }
       /*
       ** Get the next catalyst.
       */
       n = reac->getCatalystNext (cat);
     }
-    cout << "\b)";
+    cout << ")";
   }
   cout << endl;
 }
@@ -1517,11 +1528,14 @@ void ReacSet::printReacSet (bool full)
 
 void ReacSet::printMaxRAF (bool full)
 {
+  Molecule *mol;
+  
   /*
   ** Print the maxRAF reaction set.
   */
   maxRAF->printReacSet (full);
 }
+
 
 
 /*
@@ -2647,7 +2661,7 @@ void ReacSet::maxRAF2pyCOT ()
       while (itCat != cat.end ())
       {
 	mol = *itCat;
-	if (!isInClosureF (mol))
+	if (!maxRAF->isInClosureF (mol))
 	{
 	  inClF = false;
 	  break;
@@ -2733,7 +2747,7 @@ void ReacSet::maxRAF2pyCOT ()
 	  ofs << "+ m" << s << " ";
 	  itCat++;
 	}
-	ofs << "\b;" << endl;
+	ofs << ";" << endl;
 	/*
 	** If the reaction is bi-directional, write the reverse direction too.
 	*/
@@ -2812,7 +2826,7 @@ void ReacSet::maxRAF2pyCOT ()
 	    ofs << "+ m" << s << " ";
 	    itCat++;
 	  }
-	  ofs << "\b;" << endl;
+	  ofs << ";" << endl;
 	}
       }
       nextCat = reac->getCatalystNext (cat);
