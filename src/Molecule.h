@@ -1,7 +1,7 @@
 /*
 ** Molecule.h: Definition of a molecule type.
 **
-** Wim Hordijk   Last modified: 19 August 2026
+** Wim Hordijk   Last modified: 26 October 2026
 */
 
 #ifndef _MOLECULE_H_
@@ -50,8 +50,9 @@ class Molecule
   Reaction *getAsCatalystNext   ();
 
   /*
-  ** Public member variables.
+  ** Public member variables (mostly for closure computation).
   */
+  int  genF;
   bool inClosure;
   
  private:

@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 13 October 2026
+** Wim Hordijk   Last modified: 28 October 2026
 */
 
 #include <string.h>
@@ -61,6 +61,13 @@ ReacSet::~ReacSet ()
     delete rset;
   }
   iRAFs.clear ();
+  itSubRAF = cRAFs.begin ();
+  while (itSubRAF != cRAFs.end ())
+  {
+    rset = *itSubRAF;
+    delete rset;
+  }
+  cRAFs.clear ();
 }
 
 
@@ -898,10 +905,13 @@ bool ReacSet::isInClosureF (Molecule *mol)
 
 void ReacSet::computeClosureF ()
 {
-  bool      molsAdded;
-  Molecule *mol, *r, *p;
-  Reaction *reac;
-  bool      apply;
+  int                        gen;
+  bool                       molsAdded;
+  Molecule                  *mol, *r, *p;
+  Reaction                  *reac;
+  bool                       apply;
+  list<Reaction*>            addGen;
+  list<Reaction*>::iterator  itGen;
 
   /*
   ** Reset all molecules and reactions.
@@ -911,6 +921,7 @@ void ReacSet::computeClosureF ()
   {
     mol = *itMolecule;
     mol->inClosure = false;
+    mol->genF = -1;
     itMolecule++;
   }
   itReaction = reactions.begin ();
@@ -918,6 +929,7 @@ void ReacSet::computeClosureF ()
   {
     reac = *itReaction;
     reac->applied = false;
+    reac->genF = -1;
     itReaction++;
   }
 
@@ -931,17 +943,21 @@ void ReacSet::computeClosureF ()
     mol = *itFoodSet;
     closure.push_back (mol);
     mol->inClosure = true;
+    mol->genF = 0;
     itFoodSet++;
   }
-  molsAdded = true;
   
   /*
   ** Iteratively construct the closure of the food set while new molecules
   ** were still added.
   */
+  molsAdded = true;
+  gen = 0;
+  addGen.clear ();
   while (molsAdded)
   {
     molsAdded = false;
+    gen++;
     /*
     ** Check all current reactions that were not already applied.
     */
@@ -966,27 +982,12 @@ void ReacSet::computeClosureF ()
 	  r = reac->getReactantNext ();
 	}
 	/*
-	** If the reaction can be applied, add all products to the closure if
-	** they are not already in there. Otherwise, check the reverse direction
-	** if the reaction is bi-directional.
+	** If the reaction can be applied, add it to the list of reactions to add.
+	** Otherwise, check the reverse direction if the reaction is bi-directional.
 	*/
 	if (apply)
 	{
-	  /*
-	  ** Add products to the closure.
-	  */
-	  p = reac->getProductFirst ();
-	  while (p != NULL)
-	  {
-	    if (!p->inClosure)
-	    {
-	      closure.push_back (p);
-	      p->inClosure = true;
-	    }
-	    p = reac->getProductNext ();
-	  }
-	  reac->applied = true;
-	  molsAdded = true;
+	  addGen.push_back (reac);
 	}
 	else if (reac->getDirection () == BI_DIR)
 	{
@@ -1005,23 +1006,11 @@ void ReacSet::computeClosureF ()
 	    p = reac->getProductNext ();
 	  }
 	  /*
-	  ** If the reaction can be applied, add all reactants to the closure if
-	  ** they are not already in there.
+	  ** If the reaction can be applied, include it to the list of reactions to add.
 	  */
 	  if (apply)
 	  {
-	    r = reac->getReactantFirst ();
-	    while (r != NULL)
-	    {
-	      if (!r->inClosure)
-	      {
-		closure.push_back (r);
-		r->inClosure = true;
-	      }
-	      r = reac->getReactantNext ();
-	    }
-	    reac->applied = true;
-	    molsAdded = true;
+	    addGen.push_back (reac);
 	  }
 	}
       }
@@ -1030,6 +1019,42 @@ void ReacSet::computeClosureF ()
       */
       itReaction++;
     }
+    /*
+    ** Add the reactants and products of the newly applied reactions to the closure
+    ** (if they are not already in there).
+    */
+    itGen = addGen.begin ();
+    while (itGen != addGen.end ())
+    {
+      reac = *itGen;
+      r = reac->getReactantFirst ();
+      while (r != NULL)
+      {
+	if (!r->inClosure)
+	{
+	  closure.push_back (r);
+	  r->inClosure = true;
+	  r->genF = gen;
+	}
+	r = reac->getReactantNext ();
+      }
+      p = reac->getProductFirst ();
+      while (p != NULL)
+      {
+	if (!p->inClosure)
+	{
+	  closure.push_back (p);
+	  p->inClosure = true;
+	  p->genF = gen;
+	}
+	p = reac->getProductNext ();
+      }
+      reac->applied = true;
+      reac->genF = gen;
+      molsAdded = true;
+      itGen++;
+    }
+    addGen.clear ();
   }
 }
 
@@ -1649,6 +1674,7 @@ int ReacSet::applyCAFalgo ()
   */
   reacsAdded = true;
   gen = 0;
+  addGen.clear ();
   while (reacsAdded)
   {
     reacsAdded = false;
@@ -1707,7 +1733,7 @@ int ReacSet::applyCAFalgo ()
 	  }
 	}
 	/*
-	** If the reaction can be applied, include it in the list of reactions to add.
+	** If the reaction can be applied, add it to the list of reactions to add.
 	** If not, check the reverse direction if the reaction is bi-directional.
 	*/
 	if (apply)
@@ -1758,7 +1784,7 @@ int ReacSet::applyCAFalgo ()
 	    }
 	  }
 	  /*
-	  ** If the reaction can be applied, include it in the list of reactions to add.
+	  ** If the reaction can be applied, add it to the list of reactions to add.
 	  */
 	  if (apply)
 	  {
@@ -1854,16 +1880,19 @@ void ReacSet::printCAF (bool full)
     {
       gen++;
       done = true;
-      cout << "  " << gen << ": ";
-      if (full)
-      {
-	cout << endl;
-      }
       reac = CAF->getReactionFirst ();
       while (reac != NULL)
       {
 	if (reac->genCAF == gen)
 	{
+	  if (done)
+	  {
+	    cout << "  " << gen << ": ";
+	    if (full)
+	    {
+	      cout << endl;
+	    }
+	  }
 	  if (full)
 	  {
 	    cout << "    ";
@@ -1878,11 +1907,80 @@ void ReacSet::printCAF (bool full)
 	}
 	reac = CAF->getReactionNext ();
       }
-      if (!full)
+      if (!done && !full)
       {
 	cout << endl;
       }
     }
+  }
+}
+
+
+/*
+** printGenF: List the molecules and reactions according to closure generation number.
+*/
+
+void ReacSet::printGenF ()
+{
+  int       gen;
+  bool      done;
+  string    s;
+  Molecule *mol;
+  Reaction *reac;
+  
+  /*
+  ** Print the molecules by generation number.
+  */
+  cout << "Molecules by generation:" << endl;
+  gen = -1;
+  done = false;
+  while (!done)
+  {
+    gen++;
+    done = true;
+    mol = maxRAF->getMoleculeFirst ();
+    while (mol != NULL)
+    {
+      if (mol->genF == gen)
+      {
+	if (done)
+	{
+	  cout << "  " << gen << ": ";
+	}
+	mol->getSequence (s);
+	cout << s << " ";
+	done = false;
+      }
+      mol = maxRAF->getMoleculeNext ();
+    }
+    cout << endl;
+  }
+  /*
+  ** Print the reactions by generation number.
+  */
+  cout << "Reactions by generation:" << endl;
+  gen = 0;
+  done = false;
+  while (!done)
+  {
+    gen++;
+    done = true;
+    reac = maxRAF->getReactionFirst ();
+    while (reac != NULL)
+    {
+      if (reac->genF == gen)
+      {
+	if (done)
+	{
+	  cout << "  " << gen << ": ";
+	}
+	reac->getID (s);
+	cout << s << " ";
+	done = false;
+      }
+      reac = maxRAF->getReactionNext ();
+    }
+    cout << endl;
   }
 }
 
@@ -2870,6 +2968,48 @@ void ReacSet::maxRAF2pyCOT ()
 
  End_of_Routine:
   ;
+}
+
+
+/*
+** reacImpact: Remove each maxRAF reaction in turn, and compute the size of the
+**             remaining maxRAF.
+*/
+
+void ReacSet::reacImpact ()
+{
+  int       i, rSize;
+  string    s;
+  Reaction *reac;
+  ReacSet  *tmpRAF;
+
+  /*
+  ** Create a temporary reaction set and copy the maxRAF to it.
+  */
+  tmpRAF = new ReacSet ();
+  tmpRAF->copy (maxRAF);
+
+  /*
+  ** For each reaction in the maxRAF, remove it from the temporary set and compute the
+  ** size of the remaining maxRAF.
+  */
+  cout << "Reaction removal impacts:" << endl;
+  reac = maxRAF->getReactionFirst ();
+  while (reac != NULL)
+  {
+    tmpRAF->removeReaction (reac);
+    rSize = tmpRAF->findMaxRAF ();
+    reac->getID (s);
+    cout << "  " << s << ": " << rSize << endl;
+    tmpRAF->addReaction (reac);
+    reac = maxRAF->getReactionNext ();
+  }
+  cout << endl;
+
+  /*
+  ** Delete the temporary reaction set.
+  */
+  delete tmpRAF;
 }
 
 

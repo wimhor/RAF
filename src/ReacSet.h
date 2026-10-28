@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 6 October 2026
+** Wim Hordijk   Last modified: 28 October 2026
 */
 
 #ifndef _REACSET_H_
@@ -71,8 +71,10 @@ class ReacSet
   void      printCAF           (bool full);
   void      printiRAFs         (bool full);
   void      printcRAFs         (bool full);
+  void      printGenF          ();
   void      copy               (ReacSet *orig);
   void      maxRAF2pyCOT       ();
+  void      reacImpact         ();
 
  private:
   /*
@@ -80,7 +82,7 @@ class ReacSet
   */
   list<Molecule*>            molecules, foodSet, closure;
   list<Reaction*>            reactions;
-  list<ReacSet*>             iRAFs, cRAFs, subRAFs;
+  list<ReacSet*>             iRAFs, cRAFs;
   list<Molecule*>::iterator  itMolecule, itFoodSet, itClosure;
   list<Reaction*>::iterator  itReaction;
   list<ReacSet*>::iterator   itSubRAF;

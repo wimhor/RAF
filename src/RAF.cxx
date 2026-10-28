@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 12 October 2026
+** Wim Hordijk   Last modified: 28 October 2026
 */
 
 #include <iostream>
@@ -19,7 +19,7 @@ int getArguments (int argc, char **argv);
 ** Global variables.
 */
 int    smplSizeI, smplSizeC;
-bool   computeCAF, sampleiRAFs, samplecRAFs, showID, showReac, splitReacs;
+bool   computeCAF, sampleiRAFs, samplecRAFs, showID, showReac, splitReacs, genF, rImp;
 string inputFile;
 
 
@@ -85,6 +85,20 @@ int main (int argc, char **argv)
     rSet->printMaxRAF (false);
   }
   cout << endl;
+  /*
+  ** List the maxRAF molecules and reactions by generation number, if requested.
+  */
+  if (genF)
+  {
+    rSet->printGenF ();
+  }
+  /*
+  ** Compute reaction removal impacts, if requested.
+  */
+  if (rImp)
+  {
+    rSet->reacImpact ();
+  }
   /*
   ** Find the CAF, if requested.
   */
@@ -206,6 +220,8 @@ int getArguments (int argc, char **argv)
   smplSizeI = 100;
   smplSizeC = 100;
   splitReacs = false;
+  genF = false;
+  rImp = false;
   
   /*
   ** Get and check all arguments.
@@ -221,11 +237,15 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-split] [-CAF] [-iRAF I] [-cRAF C] [-print {none|ID|reac}] [-help]"
+	 << " <inFile> [-split] [-genF] [rImp] [-CAF] [-iRAF I] [-cRAF C] [-show {none|ID|reac}] [-help]"
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -split:   Split bi-directional reactions into separate forward " << endl
 	 << "            and backward reactions." << endl
+	 << "  -genF:    List the maxRAF molecules and reactions by generation number "
+	 << endl
+	 << "            in the closure of the food set computation." << endl
+	 << "  -rImp:    Compute maxRAF reaction removal impacts." << endl
 	 << "  -CAF:     Compute the CAF." << endl
 	 << "  -iRAF I:  Generate a random sample of size I of iRAFs (only unique ones "
 	 << endl
@@ -236,7 +256,7 @@ int getArguments (int argc, char **argv)
 	 << "            are shown). If C=0, write the maxRAF to a file 'pyCOT.crn' to"
 	 << endl
 	 << "            compute all organizations with pyCOT." << endl
-	 << "  -print P: What to print: 'none' = nothing (default), 'ID' = reaction"
+	 << "  -show S:  What to show: 'none' = nothing (default), 'ID' = reaction"
 	 << endl
 	 << "            IDs only, 'reac' = full reactions." << endl
 	 << "  -help:    Print this help message and exit." << endl;
@@ -251,7 +271,17 @@ int getArguments (int argc, char **argv)
       splitReacs = true;
       i++;
     }
-    if (strcmp (argv[i], "-CAF") == 0)
+    else if (strcmp (argv[i], "-genF") == 0)
+    {
+      genF = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-rImp") == 0)
+    {
+      rImp = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-CAF") == 0)
     {
       computeCAF = true;
       i++;
@@ -292,7 +322,7 @@ int getArguments (int argc, char **argv)
       samplecRAFs = true;
       i++;
     }
-    else if (strcmp (argv[i], "-print") == 0)
+    else if (strcmp (argv[i], "-show") == 0)
     {
       i++;
       if (i >= argc)
