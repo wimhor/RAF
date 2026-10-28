@@ -3,14 +3,14 @@
 # RAF
 C++ code for detecting and analyzing Reflexively Autocatalytic and Food-generated (RAF) sets, and for generating random instances of the Binary Polymer Model (BPM).
 
-This code is a cleaned-up version of what was developed over many years as typical research code with all kinds of hacks and trials & errors. The current code provides the basic functionality of finding the maxRAF, maxCAF, and irreducible RAFs (iRAFs) and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
+This code is a cleaned-up version of what was developed over many years as typical research code (with all kinds of hacks and trials & errors). The current code provides the basic functionality for finding and analyzing the maxRAF, maxCAF, irreducible RAFs (iRAFs), and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
 - W. Hordijk and M. Steel. [Autocatalytic networks at the basis of life's origin and organization](https://www.mdpi.com/2075-1729/8/4/62). _Life_ 8:62, 2018.
 - W. Hordijk. [A history of autocatalytic sets](https://link.springer.com/article/10.1007/s13752-019-00330-w). _Biological Theory_ 14(4):224-246, 2019.
 
 For a formal presentation of the algorithms implemented in this code, see
 - W. Hordijk. [Algorithms for enumerating irreducible and closed autocatalytic sets](https://www.preprints.org/manuscript/202604.1787). _Preprints_ 202604.1787, 2026.
 
-There are two programs, one for generating random instances of the binary polymer model, and one for computing the various RAF sets. This code comes without any warranty, but feel free to use it for your own purposes. If you do so, a reference to the [current repo](https://github.com/wimhor/RAF) will be appreciated.
+There are two programs, one for generating random instances of the binary polymer model, and one for computing and analying various RAF sets. This code comes without any warranty, but feel free to use it for your own purposes. If you do so, a reference to the [current repo](https://github.com/wimhor/RAF) will be appreciated.
 
 ## Compile
 To compile, go into the `src` directory and type
@@ -56,10 +56,12 @@ For the `RAF` program, the following argument is required:
 
 while these are optional:
   - `-split`:   Split bi-directional reactions into separate forward and backward reactions.
+  - `-genF`:    List the maxRAF molecules and reactions by generation number in the closure of the food set computation.
+  - `-rImp`:    Compute maxRAF reaction removal impacts.
   - `-CAF`:     Compute the maxCAF.
   - `-iRAF I`:  Generate a random sample of size `I` of irreducible RAFs (iRAFs; only unique ones are shown). If `I=0`, find all iRAFs (this may take very long!).
   - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crs' to compute all organizations with pyCOT.
-  - `-print P`: What to print: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
+  - `-show P`:  What to show: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
   - `-help`:    Print this help message and exit.
 
 Note that the `RAF` program always computes the maxRAF by default. If `-cRAF 0` is included as an argument, the maxRAF is written to a file 'pyCOT.crs' that can be used as an input file to the [pyCOT](https://github.com/tveloz/pyCOT) program to compute all organizations within the maxRAF.
@@ -67,7 +69,7 @@ Note that the `RAF` program always computes the maxRAF by default. If `-cRAF 0` 
 ## Example
 The `BinPolModel` program generates input files for the `RAF` program in the required format. One example input file is included (`example.crs`) containing an instance of the binary polymer model with `n=5`, `t=2`, and `p=0.0055`. This reaction network has a maxRAF of 20 reactions, which contains a CAF of 6 reactions, 3 iRAFs, and 6 cRAFs. Run the following command to see these results:
 
-    ./RAF example.crs -CAF -iRAF 100 -cRAF 100 -print ID
+    ./RAF example.crs -CAF -iRAF 100 -cRAF 100 -show ID
 
 Note that not all iRAFs or cRAFs may show up each time the program is run, depending on the sample size, due to the random sampling method.
 
@@ -75,7 +77,7 @@ Note that not all iRAFs or cRAFs may show up each time the program is run, depen
 See the example input file `example.crs` for the required format for the reaction network. A detailed description will be added here eventually...
 
 ## Notes
-- This repo is under continuous development, and improvements and new functionality will hopefully be added over time.
+- This repo is under continuous development, and improvements and new functionality will be added over time.
 - The `BinPolModel` program uses an implementation of the Zipf distribution (zipf.c) by [Ken Christensen](https://cse.usf.edu/~kchriste/christen.html) to generate power law distributed values.
 - Compiling and running these programs has been tested in a Linux environment, and although only standard C & C++ libraries are used, no guarantees are given that the programs compile and work properly on other operating systems.
 
