@@ -37,7 +37,7 @@ to see the list of required and optional program arguments.
 ## Arguments
 Both programs require at least one or more arguments, while several others are optional.
 
-###BinPolModel
+### BinPolModel
 For the `BinPolModel` program, the following arguments are required:
   - `n`: The maximum polymer length (`n > 1`).
   - `t`: The maximum food polymer length (`1 <= t <= n`).
@@ -52,7 +52,7 @@ while these are optional (defaults indicated):
   - `-s S`:  The random seed `S` (`S >= 0`; default = 0: use current time).
   - `-help`: Print this help message and exit.
 
-###RAF
+### RAF
 For the `RAF` program, the following argument is required:
   - `<infile>`: The file from which to read the reaction network.
 
