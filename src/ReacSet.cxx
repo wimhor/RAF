@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 28 October 2026
+** Wim Hordijk   Last modified: 16 November 2026
 */
 
 #include <string.h>
@@ -3010,6 +3010,125 @@ void ReacSet::reacImpact ()
   ** Delete the temporary reaction set.
   */
   delete tmpRAF;
+}
+
+
+/*
+** findMinFoodSet: Find a minimum food set that retains the maxRAF. Try different food
+**                 sets by randomly reordering it and removing elements one by one.
+**                 Keep the smallest one found in the sample.
+**
+** Note that this replaces the food set in the maxRAF, so any further operations done
+** on it, such as finding iRAFs or cRAFs, will be done with the new minimum food set!
+**
+** Arguments:
+**   - smplSize: The size of the sample to use.
+*/
+
+void ReacSet::findMinFoodSet (int smplSize)
+{
+  int                          i, rSize, maxRAFSize;
+  string                       s;
+  Molecule                    *mol;
+  vector<Molecule*>            tmpFood, minFood;
+  vector<Molecule*>::iterator  itTmpFood;
+  ReacSet                     *minFoodRAF;
+  default_random_engine        dre(time(NULL));
+
+  /*
+  ** Create a temporary reaction set and copy the maxRAF to it, and copy the food set
+  ** to temporary lists.
+  */
+  minFoodRAF = new ReacSet ();
+  minFoodRAF->copy (maxRAF);
+  mol = maxRAF->getFoodSetFirst ();
+  while (mol != NULL)
+  {
+    tmpFood.push_back (mol);
+    minFood.push_back (mol);
+    mol = maxRAF->getFoodSetNext ();
+  }
+  maxRAFSize = maxRAF->getNrReactions ();
+  
+  /*
+  ** Find different minimum food sets and keep the smallest one.
+  */
+  for (i = 1; i <= smplSize; i++)
+  {
+    /*
+    ** Reset the food set and shuffle the temporary one.
+    */
+    minFoodRAF->clearFoodSet ();
+    mol = maxRAF->getFoodSetFirst ();
+    while (mol != NULL)
+    {
+      minFoodRAF->addToFoodSet (mol);
+      mol = maxRAF->getFoodSetNext ();
+    }
+    shuffle (tmpFood.begin(), tmpFood.end(), dre);
+    /*
+    ** For each food molecule in the shuffled food set, remove it from the minFoodRAF
+    ** and recompute the maxRAF. If the maxRAF size reduces, add the removed food
+    ** molecule back in.
+    */
+    itTmpFood = tmpFood.begin ();
+    while (itTmpFood != tmpFood.end ())
+    {
+      mol = *itTmpFood;
+      minFoodRAF->removeFromFoodSet (mol);
+      rSize = minFoodRAF->findMaxRAF ();
+      if (rSize < maxRAFSize)
+      {
+	minFoodRAF->addToFoodSet (mol);
+      }
+      itTmpFood++;
+    }
+    /*
+    ** If the new minimum food set is smaller than the previous ones, save it.
+    */
+    if (minFoodRAF->getNrFoodMolecules () < minFood.size ())
+    {
+      minFood.clear ();
+      mol = minFoodRAF->getFoodSetFirst ();
+      while (mol != NULL)
+      {
+	minFood.push_back (mol);
+	mol = minFoodRAF->getFoodSetNext ();
+      }
+    }
+  }
+
+  /*
+  ** Remove any food molecules that are not in the minimal food set from the maxRAF.
+  */
+  itTmpFood = tmpFood.begin ();
+  while (itTmpFood != tmpFood.end ())
+  {
+    mol = *itTmpFood;
+    if (find (minFood.begin (), minFood.end (), mol) == minFood.end ())
+    {
+      maxRAF->removeFromFoodSet (mol);
+    }
+    itTmpFood++;
+  }
+  
+  /*
+  ** Print the minimum food set.
+  */
+  cout << "Minimum food set: " << minFood.size () << endl << " ";
+  mol = maxRAF->getFoodSetFirst ();
+  while (mol != NULL)
+  {
+    mol->getSequence (s);
+    cout << " " << s;
+    mol = maxRAF->getFoodSetNext ();
+  }
+  cout << endl << endl;
+
+  /*
+  ** Delete the temporary reaction set.
+  */
+  delete minFoodRAF;
 }
 
 

@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 28 October 2026
+** Wim Hordijk   Last modified: 16 November 2026
 */
 
 #include <iostream>
@@ -18,8 +18,9 @@ int getArguments (int argc, char **argv);
 /*
 ** Global variables.
 */
-int    smplSizeI, smplSizeC;
-bool   computeCAF, sampleiRAFs, samplecRAFs, showID, showReac, splitReacs, genF, rImp;
+int    smplSizeI, smplSizeC, smplSizeM;
+bool   computeCAF, sampleiRAFs, samplecRAFs, minFood, showID, showReac, splitReacs,
+       genF, rImp;
 string inputFile;
 
 
@@ -116,6 +117,14 @@ int main (int argc, char **argv)
     }
     cout << endl;
   }
+  /*
+  ** Find a minimum food set, if requested. Note that iRAFs and cRAFs will be computed
+  ** using the minimum food set if one is requested.
+  */
+  if (minFood)
+  {
+    rSet->findMinFoodSet (smplSizeM);
+  }  
   /*
   ** Find iRAFs, if requested.
   */
@@ -214,11 +223,13 @@ int getArguments (int argc, char **argv)
   computeCAF = false;
   sampleiRAFs = false;
   samplecRAFs = false;
+  minFood = false;
   showID = false;
   showReac = false;
   inputFile.assign ("");
   smplSizeI = 100;
   smplSizeC = 100;
+  smplSizeM = 10;
   splitReacs = false;
   genF = false;
   rImp = false;
@@ -237,17 +248,22 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-split] [-genF] [rImp] [-CAF] [-iRAF I] [-cRAF C] [-show {none|ID|reac}] [-help]"
+	 << " <inFile> [-split] [-genF] [rImp] [-CAF] [-minF M] [-iRAF I] [-cRAF C] [-show {none|ID|reac}] [-help]"
 	 << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -split:   Split bi-directional reactions into separate forward " << endl
 	 << "            and backward reactions." << endl
-	 << "  -genF:    List the maxRAF molecules and reactions by generation number "
+	 << "  -genF:    List the maxRAF molecules and reactions by generation number"
 	 << endl
 	 << "            in the closure of the food set computation." << endl
 	 << "  -rImp:    Compute maxRAF reaction removal impacts." << endl
 	 << "  -CAF:     Compute the CAF." << endl
-	 << "  -iRAF I:  Generate a random sample of size I of iRAFs (only unique ones "
+	 << "  -minF M:  Find a minimum food set from a sample of size M. If this option"
+	 << endl
+	 << "            is included, iRAFs and cRAFs (see next options) are computed"
+	 << endl
+	 << "            using the minimum food set." << endl
+	 << "  -iRAF I:  Generate a random sample of size I of iRAFs (only unique ones"
 	 << endl
 	 << "            are shown). If I=0, find all iRAFs (this may take very long!)."
 	 << endl
@@ -320,6 +336,24 @@ int getArguments (int argc, char **argv)
 	goto End_of_Routine;
       }
       samplecRAFs = true;
+      i++;
+    }
+    else if (strcmp (argv[i], "-minF") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+	status = -1;
+	cerr << "Missing value for argument '-minF'." << endl;
+	goto End_of_Routine;
+      }
+      if ((sscanf (argv[i], "%d", &smplSizeM) != 1) || (smplSizeM < 1))
+      {
+	status = -1;
+	cerr << "Invalid value for minF sample size: " << argv[i] << endl;
+	goto End_of_Routine;
+      }
+      minFood = true;
       i++;
     }
     else if (strcmp (argv[i], "-show") == 0)

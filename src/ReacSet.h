@@ -1,7 +1,7 @@
 /*
 ** ReacSet.h: Definition of a chemical reaction set.
 **
-** Wim Hordijk   Last modified: 28 October 2026
+** Wim Hordijk   Last modified: 16 November 2026
 */
 
 #ifndef _REACSET_H_
@@ -75,6 +75,7 @@ class ReacSet
   void      copy               (ReacSet *orig);
   void      maxRAF2pyCOT       ();
   void      reacImpact         ();
+  void      findMinFoodSet     (int smplSize);
 
  private:
   /*
