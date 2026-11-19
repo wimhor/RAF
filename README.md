@@ -52,7 +52,6 @@ while these are optional (defaults indicated):
   - `-f`:    Use only forward (ligation) reactions.
   - `-b`:    Write corresponding ligation & cleavage reactions as a single bi-directional reaction (ignored with `-f`).
   - `-s S`:  The random seed `S` (`S >= 0`; default = 0: use current time).
-  - `-help`: Print this help message and exit.
 
 ### RAF
 For the `RAF` program, the following argument is required:
