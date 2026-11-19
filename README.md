@@ -68,8 +68,6 @@ while these are optional:
   - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crs' to compute all organizations with pyCOT.
   - `-show P`:  What to show: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
 
-Alternatively, run the `RAF` program with the single option `-help` to get an overview of the required and optional arguments.
-
 Note that the `RAF` program always computes the maxRAF by default. If `-cRAF 0` is included as an argument, the maxRAF is written to a file 'pyCOT.crs' that can be used as an input file to the [pyCOT](https://github.com/tveloz/pyCOT) program to compute all organizations within the maxRAF.
 
 ## Example

@@ -1,7 +1,7 @@
 /*
 ** BinPolModel.cxx: Program for generating random instances of the binary polymer model.
 **
-** Wim Hordijk   Last modified: 18 August 2026
+** Wim Hordijk   Last modified: 19 November 2026
 */
 
 #include <stdlib.h>
@@ -160,8 +160,9 @@ int getArguments (int argc, char **argv)
     {
       status = -1;
       cout << "Usage: " << argv[0]
-	   << " n t p [-c {unif|plaw}] [-i I] [-x] [-f] [-b] [-s S] [-help]" << endl
+	   << " n t p [-c {unif|plaw}] [-i I] [-x] [-f] [-b] [-s S]" << endl
 	   << endl
+	   << "or: " << argv[0] << " -help" << endl << endl
 	   << "  n:     The maximum polymer length (n > 1)." << endl
 	   << "  t:     The maximum food polymer length (1 <= t <= n)." << endl
 	   << "  p:     The catalysis probability (p >= 0.0)." << endl
@@ -182,7 +183,7 @@ int getArguments (int argc, char **argv)
     else
     {
       status = -1;
-      cerr << "Arguments 'n', 't', and 'p' are mandatory. Use '" << argv[0]
+      cerr << "Arguments 'n', 't', and 'p' are mandatory. Run '" << argv[0]
 	   << " -help' to see the required and optional program arguments." << endl;
       goto End_of_Routine;
     }
