@@ -1,7 +1,7 @@
 /*
 ** RAF.cxx: Find various RAF sets within a given chemical reaction network.
 **
-** Wim Hordijk   Last modified: 16 November 2026
+** Wim Hordijk   Last modified: 19 November 2026
 */
 
 #include <iostream>
@@ -240,7 +240,7 @@ int getArguments (int argc, char **argv)
   if (argc < 2)
   {
     status = -1;
-    cerr << "Providing an input file name is mandatory. Use '" << argv[0]
+    cerr << "Providing an input file name is mandatory. Run '" << argv[0]
 	 << " -help' to see the required and optional program arguments." << endl;
     goto End_of_Routine;
   }
@@ -248,8 +248,9 @@ int getArguments (int argc, char **argv)
   {
     status = -1;
     cout << "Usage: " << argv[0]
-	 << " <inFile> [-split] [-genF] [rImp] [-CAF] [-minF M] [-iRAF I] [-cRAF C] [-show {none|ID|reac}] [-help]"
+	 << " <inFile> [-split] [-genF] [-rImp] [-CAF] [-minF M] [-iRAF I] [-cRAF C] [-show {none|ID|reac}]"
 	 << endl << endl
+	 << "or: " << argv[0] << " -help" << endl << endl
 	 << "  <inFile>: The file from which to read the reaction network." << endl
 	 << "  -split:   Split bi-directional reactions into separate forward " << endl
 	 << "            and backward reactions." << endl
@@ -262,7 +263,7 @@ int getArguments (int argc, char **argv)
 	 << endl
 	 << "            is included, iRAFs and cRAFs (see next options) are computed"
 	 << endl
-	 << "            using the minimum food set." << endl
+	 << "            using the minimum food set found." << endl
 	 << "  -iRAF I:  Generate a random sample of size I of iRAFs (only unique ones"
 	 << endl
 	 << "            are shown). If I=0, find all iRAFs (this may take very long!)."

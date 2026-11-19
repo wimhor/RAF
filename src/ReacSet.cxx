@@ -1,7 +1,7 @@
 /*
 ** ReacSet.cxx: Implementation of the reaction set class.
 **
-** Wim Hordijk   Last modified: 16 November 2026
+** Wim Hordijk   Last modified: 18 November 2026
 */
 
 #include <string.h>

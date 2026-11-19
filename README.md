@@ -3,7 +3,9 @@
 # RAF
 C++ code for detecting and analyzing Reflexively Autocatalytic and Food-generated (RAF) sets, and for generating random instances of the Binary Polymer Model (BPM).
 
-This code is a cleaned-up version of what was developed over many years as typical research code (with all kinds of hacks and trials & errors). The current code provides the basic functionality for finding and analyzing the maxRAF, maxCAF, irreducible RAFs (iRAFs), and closed RAFs (cRAFs) in a given chemical reaction network. For an introduction to autocatalytic sets, see
+This code is a cleaned-up version of what was developed over many years as typical research code (with all kinds of hacks and trials & errors). The current code provides the basic functionality for finding and analyzing the maxRAF, maxCAF, irreducible RAFs (iRAFs), and closed RAFs (cRAFs) in a given chemical reaction network. Additional functionality will be added over time.
+
+For an introduction to autocatalytic sets, see
 - W. Hordijk and M. Steel. [Autocatalytic networks at the basis of life's origin and organization](https://www.mdpi.com/2075-1729/8/4/62). _Life_ 8:62, 2018.
 - W. Hordijk. [A history of autocatalytic sets](https://link.springer.com/article/10.1007/s13752-019-00330-w). _Biological Theory_ 14(4):224-246, 2019.
 
@@ -61,10 +63,12 @@ while these are optional:
   - `-genF`:    List the maxRAF molecules and reactions by generation number in the closure of the food set computation.
   - `-rImp`:    Compute maxRAF reaction removal impacts.
   - `-CAF`:     Compute the maxCAF.
+  - `-minF M`:  Find a minimum food set from a sample of size M. If this option is included, iRAFs and cRAFs (see next options) are computed using the minimum food set found.
   - `-iRAF I`:  Generate a random sample of size `I` of irreducible RAFs (iRAFs; only unique ones are shown). If `I=0`, find all iRAFs (this may take very long!).
   - `-cRAF C`:  Generate a random sample of size `C` of closed RAFs (cRAFs; only unique ones are shown). If `C=0`, write the maxRAF to a file 'pyCOT.crs' to compute all organizations with pyCOT.
   - `-show P`:  What to show: `none` = nothing (default), `ID` = reaction IDs only, `reac` = full reactions.
-  - `-help`:    Print this help message and exit.
+
+Alternatively, run the `RAF` program with the single option `-help` to get an overview of the required and optional arguments.
 
 Note that the `RAF` program always computes the maxRAF by default. If `-cRAF 0` is included as an argument, the maxRAF is written to a file 'pyCOT.crs' that can be used as an input file to the [pyCOT](https://github.com/tveloz/pyCOT) program to compute all organizations within the maxRAF.
 
