@@ -87,5 +87,4 @@ See the example input file `example.crs` for the required format for the reactio
 ## Acknowledgements
 This repo was made possible by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic) and the [AMIGO project](https://clea.research.vub.be/amigo).
 
-![MATOMIC logo](/img/matomic.png)
-
+![MATOMIC logo](/img/matomic.png) ![AMIGO logo](/img/Amigo_logo.png)
