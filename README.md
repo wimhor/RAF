@@ -85,7 +85,7 @@ See the example input file `example.crs` for the required format for the reactio
 - Compiling and running these programs has been tested in a Linux environment, and although only standard C & C++ libraries are used, no guarantees are given that the programs compile and work properly on other operating systems.
 
 ## Acknowledgements
-This repo was made possible in part by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic).
+This repo was made possible by funding from the [MATOMIC project](https://www.sdu.dk/en/forskning/matomic) and the [AMIGO project](https://clea.research.vub.be/amigo).
 
 ![MATOMIC logo](/img/matomic.png)
 
